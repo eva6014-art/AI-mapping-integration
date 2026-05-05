@@ -648,39 +648,86 @@ select.control:focus { border-color: var(--line2); background-color: var(--white
         <div class="field">
           <label class="field-label">插畫風格</label>
           <select class="control" id="style">
-            <option value="photorealistic, ultra-detailed photography">寫實攝影</option>
-            <option value="premium commercial photography, studio quality">商業棚拍</option>
-            <option value="cinematic film still, movie-quality render">電影質感</option>
-            <option value="flat vector illustration, clean geometric shapes">扁平向量</option>
-            <option value="3D render, glossy materials, depth of field">3D 渲染</option>
-            <option value="editorial illustration, magazine style">編輯插畫</option>
-            <option value="Japanese anime illustration style">日系插畫</option>
-            <option value="luxury brand campaign photography">奢品廣告</option>
+            <optgroup label="── 寫實 / 攝影">
+              <option value="photorealistic, ultra-detailed photography, sharp focus">寫實攝影 (Photorealistic)</option>
+              <option value="minimalist product photography, clean white studio background, professional lighting">極簡產品棚拍 (Product Photography)</option>
+              <option value="luxury brand campaign photography, editorial fashion">奢品廣告攝影 (Luxury Campaign)</option>
+              <option value="cinematic film still, anamorphic lens, movie-quality render, 35mm film grain">電影質感 (Cinematic Film)</option>
+            </optgroup>
+            <optgroup label="── 動漫 / 插畫">
+              <option value="Japanese anime illustration style, vibrant colors, clean linework">動漫風格 (Anime Style)</option>
+              <option value="Japanese shoujo manga style, delicate linework, soft pastel tones, sparkle effects">日本少女漫畫 (Shoujo Manga)</option>
+              <option value="Japanese shounen manga style, bold linework, dynamic action composition">日本少年漫畫 (Shounen Manga)</option>
+              <option value="black and white shoujo manga, ink illustration, screen tone texture">日本黑白少女漫畫 (B&amp;W Shoujo)</option>
+              <option value="black and white shounen manga, high contrast ink, speed lines">日本黑白少年漫畫 (B&amp;W Shounen)</option>
+            </optgroup>
+            <optgroup label="── 扁平 / 向量">
+              <option value="flat vector illustration, clean geometric shapes, bold colors, no gradients">扁平化商業插畫 (Flat Vector)</option>
+              <option value="Japanese flat poster art style, retro travel poster aesthetic, limited color palette">日系扁平海報插畫 (Flat Poster Art)</option>
+              <option value="flat infographic illustration, isometric icons, modern data visualization style">現代扁平資訊圖表 (Flat Infographic)</option>
+              <option value="editorial illustration, magazine style, conceptual art, sophisticated composition">雜誌編輯風格插畫 (Editorial Illustration)</option>
+              <option value="flat vector logo design, minimalist icon, clean brand identity">扁平化商標設計 (Flat Vector Logo)</option>
+            </optgroup>
+            <optgroup label="── 3D / 數位">
+              <option value="3D render, glossy materials, depth of field, octane render, studio lighting">3D 渲染 (3D Animation)</option>
+              <option value="3D clay icon style, soft matte texture, pastel colors, cute chibi proportions">3D 黏土圖示 (3D Clay Icon)</option>
+              <option value="cyberpunk aesthetic, neon lights, rain-soaked streets, dystopian city, high contrast">賽博龐克 (Cyberpunk)</option>
+            </optgroup>
+            <optgroup label="── 藝術繪畫">
+              <option value="watercolor painting, soft washes, bleeding edges, delicate brushwork, paper texture">水彩畫 (Watercolor)</option>
+              <option value="oil painting, thick impasto brushstrokes, rich pigment, canvas texture, classical style">油畫 (Oil Painting)</option>
+              <option value="pop art style, bold outlines, Ben-Day dots, high saturation, Andy Warhol inspired">普普藝術 (Pop Art)</option>
+            </optgroup>
           </select>
         </div>
         <div class="field">
           <label class="field-label">光影設定</label>
           <select class="control" id="lighting">
-            <option value="dramatic cinematic lighting, volumetric light rays, deep shadows">戲劇電影光</option>
-            <option value="soft studio lighting, professional even illumination">棚拍柔光</option>
-            <option value="golden hour natural light, warm backlight">黃金時刻</option>
-            <option value="neon accent lighting, reflective surfaces">霓虹反光</option>
-            <option value="high-key bright lighting, clean and airy">高調明亮</option>
-            <option value="low-key moody lighting, rich dark tones">低調暗部</option>
-            <option value="rim lighting, glowing edges, backlit silhouette">輪廓光</option>
+            <option value="dramatic cinematic lighting, volumetric light rays, deep shadows, god rays">戲劇電影光 (Cinematic Lighting)</option>
+            <option value="natural light, soft diffused sunlight, realistic outdoor illumination">自然光 (Natural Light)</option>
+            <option value="neon lights, colorful LED reflections, wet surface glow, cyberpunk illumination">霓虹燈 (Neon Lights)</option>
+            <option value="golden hour sunlight, warm amber backlight, long soft shadows, magic hour">黃金時刻 (Golden Hour)</option>
+            <option value="professional studio lighting, softbox, clean even illumination, product-grade">棚拍打光 (Studio Lighting)</option>
+            <option value="volumetric lighting, light shafts through atmosphere, god rays, dust particles">體積光 / 耶穌光 (Volumetric)</option>
+            <option value="soft diffuse lighting, overcast sky, shadowless, gentle wrap-around fill">柔和漫射光 (Soft Diffuse)</option>
+            <option value="rim lighting, glowing edges, backlit silhouette, halo effect">輪廓光 (Rim Lighting)</option>
+            <option value="high-key bright lighting, clean airy aesthetic, minimal shadows, lifestyle mood">高調明亮 (High-Key)</option>
+            <option value="low-key moody lighting, rich dark tones, chiaroscuro, deep shadows">低調暗調 (Low-Key)</option>
           </select>
         </div>
         <div class="field">
           <label class="field-label">色彩方向</label>
           <select class="control" id="color">
-            <option value="deep navy blue and gold color palette, premium financial aesthetic">深藍金融感</option>
-            <option value="monochromatic black and white with single gold accent">黑白金點綴</option>
-            <option value="rich emerald green and champagne gold">祖母綠香檳金</option>
-            <option value="warm terracotta and cream tones">磚紅奶油</option>
-            <option value="cool silver and midnight blue, tech fintech">銀灰科技藍</option>
-            <option value="vibrant coral and white, energetic lifestyle">珊瑚活力白</option>
-            <option value="muted sage green and warm beige, modern minimalist">鼠尾草米色</option>
-            <option value="deep burgundy and rose gold, luxury feminine">酒紅玫瑰金</option>
+            <optgroup label="── 金融 / 商業">
+              <option value="deep navy blue and gold color palette, premium financial aesthetic, rich dark tones">深藍金融感 (Navy + Gold)</option>
+              <option value="monochromatic black and white with single gold accent, high contrast luxury">黑白金點綴 (B&amp;W + Gold)</option>
+              <option value="cool silver and midnight blue, tech fintech, metallic sheen">銀灰科技藍 (Silver + Blue)</option>
+              <option value="rich emerald green and champagne gold, wealth and prosperity">祖母綠香檳金 (Emerald + Champagne)</option>
+              <option value="deep burgundy and rose gold, luxury premium, sophisticated feminine">酒紅玫瑰金 (Burgundy + Rose Gold)</option>
+              <option value="charcoal grey and electric blue, modern corporate fintech">碳灰電藍 (Charcoal + Electric Blue)</option>
+              <option value="pure white and platinum silver, ultra clean minimal luxury">純白鉑金 (White + Platinum)</option>
+            </optgroup>
+            <optgroup label="── 生活 / 旅遊">
+              <option value="vibrant coral and white, energetic lifestyle, fresh tropical feel">珊瑚活力白 (Coral + White)</option>
+              <option value="warm terracotta and cream tones, earthy Mediterranean lifestyle">磚紅奶油 (Terracotta + Cream)</option>
+              <option value="muted sage green and warm beige, modern minimalist wellness">鼠尾草米色 (Sage + Beige)</option>
+              <option value="sky blue and sunny yellow, cheerful travel optimism, summer holiday">天空藍陽光黃 (Sky + Yellow)</option>
+              <option value="deep ocean teal and sandy beige, coastal luxury resort">海洋青砂米 (Teal + Sand)</option>
+              <option value="dusty rose and warm ivory, romantic soft feminine lifestyle">霧粉象牙 (Dusty Rose + Ivory)</option>
+              <option value="forest green and cognac brown, adventure outdoor premium">森林綠干邑棕 (Forest + Cognac)</option>
+            </optgroup>
+            <optgroup label="── 科技 / 未來">
+              <option value="neon cyan and deep purple, futuristic tech cyberpunk glow">電光青紫 (Cyan + Purple)</option>
+              <option value="electric blue and pure black, sleek tech product, minimal dark mode">電藍純黑 (Electric Blue + Black)</option>
+              <option value="holographic iridescent pastel, pearl shimmer, future luxury">全息彩虹珠光 (Holographic)</option>
+              <option value="neon green and dark charcoal, hacker aesthetic, terminal green">霓虹綠碳黑 (Neon Green + Charcoal)</option>
+            </optgroup>
+            <optgroup label="── 藝術 / 創意">
+              <option value="warm amber and deep indigo, moody artistic editorial contrast">琥珀靛藍 (Amber + Indigo)</option>
+              <option value="pastel rainbow soft gradient, dreamy kawaii, cotton candy palette">彩虹馬卡龍 (Pastel Rainbow)</option>
+              <option value="monochromatic warm sepia tones, nostalgic film photography">單色暖褐 (Sepia Monochrome)</option>
+              <option value="bold primary colors, red yellow blue, graphic design pop art energy">原色大膽 (Bold Primary)</option>
+            </optgroup>
           </select>
         </div>
       </div>
