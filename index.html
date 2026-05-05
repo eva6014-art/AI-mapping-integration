@@ -107,7 +107,7 @@
   .block-label{flex:1;font-size:12px;font-weight:500;color:var(--text);min-width:0;truncate:ellipsis}
   .block-type{font-family:var(--mono);font-size:9px;color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
 
-  .block-body{padding:0 10px 10px}
+  .block-body{padding:0 10px 10px;display:flex;flex-direction:column;gap:8px}
 
   .block-value{
     width:100%;background:var(--bg);border:1px solid var(--line);
@@ -280,6 +280,23 @@
   .mode-kv{background:#dbeafe;color:#1e40af}
   .mode-illust{background:#ede9fe;color:#5b21b6}
   .mode-sns{background:#dcfce7;color:#166534}
+
+  /* ── Variant Editor ── */
+  .variant-editor{margin-top:0}
+  .variant-editor-label{
+    font-size:10px;color:var(--faint);margin-bottom:8px;line-height:1.4;
+    padding:5px 8px;background:var(--bg);border-radius:var(--r);
+    border:1px solid var(--line);
+  }
+  .variant-row-wrap{margin-bottom:8px}
+  .variant-row-wrap:last-child{margin-bottom:0}
+  .variant-row-head{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+  .variant-tag{
+    font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.06em;
+    padding:1px 7px;border-radius:100px;flex-shrink:0;
+  }
+  .variant-row-desc{font-size:10px;color:var(--faint)}
+  .variant-input{min-height:44px}
 </style>
 </head>
 <body>
@@ -501,11 +518,44 @@ function WeightSlider({weight,onChange}){
   );
 }
 
-function VariantChips({active,onChange}){
-  return React.createElement('div',{className:'block-variants'},
-    ['A','B','C'].map(k=>
-      React.createElement('div',{key:k,className:'variant-chip'+(active===k?' active':''),
-        onClick:()=>onChange(k)},k)
+function VariantEditor({block,onUpdate}){
+  const {id,type,variants,options}=block;
+  const VKEYS=[
+    {k:'A',label:'A',color:'#1c1b18',desc:'基本版'},
+    {k:'B',label:'B',color:'#d97706',desc:'替代版'},
+    {k:'C',label:'C',color:'#7c3aed',desc:'暗色版'},
+  ];
+  const update=(patch)=>onUpdate(id,patch);
+  const updateVal=(k,val)=>{
+    const nv={...variants,[k]:val};
+    update({variants:nv});
+  };
+  return React.createElement('div',{className:'variant-editor'},
+    React.createElement('div',{className:'variant-editor-label'},'每個變體的值（A/B/C 分別對應右側三組 prompt）'),
+    VKEYS.map(({k,label,color,desc})=>
+      React.createElement('div',{key:k,className:'variant-row-wrap'},
+        React.createElement('div',{className:'variant-row-head'},
+          React.createElement('span',{className:'variant-tag',style:{background:color,color:'#fff'}},label),
+          React.createElement('span',{className:'variant-row-desc'},desc)
+        ),
+        type==='textarea'
+          ?React.createElement('textarea',{
+              className:'block-value variant-input',rows:2,
+              value:variants[k]??'',placeholder:'填入變體'+label+'的內容…',
+              onChange:e=>updateVal(k,e.target.value)
+            })
+          :type==='select'
+          ?React.createElement(SelectWithGroups,{
+              value:variants[k]??'',
+              onChange:val=>updateVal(k,val),
+              options,isFlat:!options[0]?.opts
+            })
+          :React.createElement(RadioGroup,{
+              value:variants[k]??'',
+              onChange:val=>updateVal(k,val),
+              options
+            })
+      )
     )
   );
 }
@@ -535,14 +585,8 @@ function RadioGroup({value,onChange,options}){
 }
 
 function Block({block,index,onUpdate,onDragStart,onDragOver,onDrop,isDragging}){
-  const {id,label,type,enabled,weight,value,variants,activeVariant,category,options}=block;
-  const activeVal=variants[activeVariant]??value;
-
+  const {id,label,type,enabled,weight,variants,category,options}=block;
   const update=(patch)=>onUpdate(id,patch);
-  const updateVariantVal=(val)=>{
-    const nv={...variants,[activeVariant]:val};
-    update({variants:nv,value:activeVariant==='A'?val:value});
-  };
 
   return React.createElement('div',{
     className:'block'+(enabled?'':' disabled')+(isDragging?' dragging':''),
@@ -561,19 +605,8 @@ function Block({block,index,onUpdate,onDragStart,onDragOver,onDrop,isDragging}){
       React.createElement('span',{className:'block-type'},category)
     ),
     enabled&&React.createElement('div',{className:'block-body'},
-      type==='textarea'&&React.createElement('textarea',{
-        className:'block-value',rows:3,value:activeVal,placeholder:'輸入描述…',
-        onChange:e=>updateVariantVal(e.target.value)
-      }),
-      type==='select'&&React.createElement(SelectWithGroups,{
-        value:activeVal,onChange:updateVariantVal,
-        options,isFlat:!options[0]?.opts
-      }),
-      type==='radio'&&React.createElement(RadioGroup,{value:activeVal,onChange:updateVariantVal,options}),
-      React.createElement(WeightSlider,{weight,onChange:w=>update({weight:w})}),
-      React.createElement(VariantChips,{active:activeVariant,onChange:k=>{
-        update({activeVariant:k});
-      }})
+      React.createElement(VariantEditor,{block,onUpdate}),
+      React.createElement(WeightSlider,{weight,onChange:w=>update({weight:w})})
     )
   );
 }
