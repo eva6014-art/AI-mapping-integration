@@ -803,7 +803,7 @@ ${diffDirections.map((d, i) => `變體 ${i + 1}：${d}`).join('\n')}
       body: JSON.stringify({
         systemInstruction: { role: "user", parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { temperature: 0.85, maxOutputTokens: 3000 }
+        generationConfig: { temperature: 0.85, maxOutputTokens: 8192 }
       })
     });
 
@@ -812,8 +812,27 @@ ${diffDirections.map((d, i) => `變體 ${i + 1}：${d}`).join('\n')}
     if (data.error) throw new Error(data.error.message);
 
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const cleaned = rawText.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    let cleaned = rawText.replace(/```json|```/g, '').trim();
+    const start = cleaned.indexOf('{');
+    let end = cleaned.lastIndexOf('}');
+    if (start === -1) throw new Error('回傳內容不含 JSON，請重試');
+    if (end === -1) {
+      cleaned = cleaned.slice(start) + '}}';
+    } else {
+      cleaned = cleaned.slice(start, end + 1);
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch(e) {
+      const lastComma = cleaned.lastIndexOf('},');
+      if (lastComma > 0) {
+        const fixed = cleaned.slice(0, lastComma + 1) + ']}}';
+        parsed = JSON.parse(fixed);
+      } else {
+        throw new Error('JSON 解析失敗，請重試（' + e.message + '）');
+      }
+    }
 
     // Assign seeds
     parsed.variants.forEach(v => { v.seed = makeSeed(); });
