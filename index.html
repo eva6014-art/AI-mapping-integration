@@ -440,17 +440,14 @@ const makeBlocks=()=>[
 // COMPOSE
 // ─────────────────────────────────────────────
 function composePrompt(blocks,variantKey='A'){
-  const get=(id)=>{
-    const b=blocks.find(b=>b.id===id);
-    if(!b||!b.enabled)return'';
-    const raw=variantKey&&b.variants?b.variants[variantKey]??b.value:b.value;
-    return raw||'';
-  };
   const parts=[];
   const suffix=[];
   blocks.forEach(b=>{
     if(!b.enabled)return;
-    const val=variantKey?b.variants[variantKey]??b.value:b.value;
+    // Use variants[key] if the key exists; don't fallback to b.value
+    const val=(b.variants&&variantKey in b.variants)
+      ? b.variants[variantKey]
+      : b.value;
     if(!val)return;
     if(b.category==='suffix'){suffix.push(val);}
     else{parts.push(val);}
@@ -462,7 +459,9 @@ function getSegments(blocks,variantKey='A'){
   const cats={subject:[],layout:[],style:[],light:[],color:[],quality:[],suffix:[]};
   blocks.forEach(b=>{
     if(!b.enabled)return;
-    const val=variantKey?b.variants[variantKey]??b.value:b.value;
+    const val=(b.variants&&variantKey in b.variants)
+      ? b.variants[variantKey]
+      : b.value;
     if(!val)return;
     if(cats[b.category])cats[b.category].push(val);
   });
@@ -528,7 +527,8 @@ function VariantEditor({block,onUpdate}){
   const update=(patch)=>onUpdate(id,patch);
   const updateVal=(k,val)=>{
     const nv={...variants,[k]:val};
-    update({variants:nv});
+    // keep b.value in sync with A so live preview always reflects A
+    update({variants:nv, ...(k==='A'?{value:val}:{})});
   };
   return React.createElement('div',{className:'variant-editor'},
     React.createElement('div',{className:'variant-editor-label'},'每個變體的值（A/B/C 分別對應右側三組 prompt）'),
