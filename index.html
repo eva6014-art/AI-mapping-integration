@@ -2,1082 +2,909 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt Builder — KV Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Prompt Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --white: #ffffff;
-  --off: #f7f6f3;
-  --off2: #efede8;
-  --line: #e2dfd8;
-  --line2: #ccc9c0;
-  --muted: #a09d94;
-  --body: #3d3b36;
-  --head: #1a1916;
-  --accent: #1a1916;
-  --accent-soft: rgba(26,25,22,0.06);
-  --blue: #2563eb;
-  --blue-soft: rgba(37,99,235,0.08);
-  --green: #16a34a;
-  --amber: #d97706;
-  --mono: 'IBM Plex Mono', monospace;
-  --serif: 'Instrument Serif', serif;
-  --sans: 'Geist', sans-serif;
-  --sidebar: 300px;
-  --radius: 6px;
-  --radius-sm: 3px;
-}
-
-html, body {
-  height: 100%;
-  background: var(--off);
-  color: var(--body);
-  font-family: var(--sans);
-  font-size: 13px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── Layout ── */
-.app {
-  display: grid;
-  grid-template-columns: var(--sidebar) 1fr;
-  grid-template-rows: 44px 1fr;
-  height: 100vh;
-  min-height: 600px;
-}
-
-/* ── Topbar ── */
-.topbar {
-  grid-column: 1 / -1;
-  background: var(--white);
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 8px;
-  position: relative;
-}
-
-.topbar-logo {
-  font-family: var(--mono);
-  font-weight: 500;
-  font-size: 12px;
-  color: var(--head);
-  letter-spacing: 0.02em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.topbar-logo::before {
-  content: '';
-  display: block;
-  width: 18px; height: 18px;
-  background: var(--head);
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.topbar-divider {
-  width: 1px; height: 16px;
-  background: var(--line2);
-  margin: 0 4px;
-}
-
-.topbar-file {
-  font-size: 12px; color: var(--muted);
-}
-
-.topbar-right {
-  margin-left: auto;
-  display: flex; align-items: center; gap: 8px;
-}
-
-.topbar-badge {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 2px 7px;
-  border-radius: 100px;
-  background: var(--off2);
-  color: var(--muted);
-  letter-spacing: 0.04em;
-}
-
-/* ── Sidebar ── */
-.sidebar {
-  background: var(--white);
-  border-right: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.sidebar::-webkit-scrollbar { width: 3px; }
-.sidebar::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
-
-.section {
-  border-bottom: 1px solid var(--line);
-}
-
-.section-head {
-  padding: 10px 14px 9px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  user-select: none;
-}
-
-.section-title {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-
-.section-caret {
-  font-size: 9px;
-  color: var(--muted);
-  transition: transform 0.15s;
-}
-
-.section.collapsed .section-caret { transform: rotate(-90deg); }
-.section.collapsed .section-body { display: none; }
-
-.section-body { padding: 0 14px 14px; }
-
-/* ── Field ── */
-.field { margin-bottom: 12px; }
-.field:last-child { margin-bottom: 0; }
-
-.field-label {
-  display: block;
-  font-size: 11px;
-  color: var(--muted);
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-textarea.control {
-  width: 100%;
-  background: var(--off);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-family: var(--sans);
-  font-size: 12.5px;
-  color: var(--head);
-  resize: none;
-  outline: none;
-  transition: border-color 0.15s;
-  line-height: 1.55;
-  min-height: 88px;
-}
-textarea.control:focus { border-color: var(--line2); background: var(--white); }
-textarea.control::placeholder { color: var(--muted); }
-
-select.control {
-  width: 100%;
-  background: var(--off);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 7px 28px 7px 9px;
-  font-family: var(--sans);
-  font-size: 12.5px;
-  color: var(--head);
-  outline: none;
-  appearance: none;
-  cursor: pointer;
-  transition: border-color 0.15s;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a09d94' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 9px center;
-}
-select.control:focus { border-color: var(--line2); background-color: var(--white); }
-
-/* ── Radio group ── */
-.radio-group {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-
-.radio-pill {
-  display: flex; align-items: center;
-}
-
-.radio-pill input { display: none; }
-
-.radio-pill label {
-  padding: 5px 10px;
-  border: 1px solid var(--line);
-  border-radius: 100px;
-  font-size: 11.5px;
-  color: var(--body);
-  cursor: pointer;
-  transition: all 0.12s;
-  user-select: none;
-  white-space: nowrap;
-}
-
-.radio-pill input:checked + label {
-  background: var(--head);
-  border-color: var(--head);
-  color: var(--white);
-}
-
-.radio-pill label:hover { border-color: var(--line2); }
-
-/* ── Saved prompts ── */
-.saved-list {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.saved-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 7px 9px;
-  background: var(--off);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: border-color 0.12s;
-}
-.saved-item:hover { border-color: var(--line2); }
-
-.saved-item-text {
-  flex: 1;
-  font-size: 11px;
-  color: var(--body);
-  line-height: 1.4;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.saved-item-del {
-  flex-shrink: 0;
-  width: 16px; height: 16px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  color: var(--muted);
-  line-height: 1;
-  border-radius: 2px;
-  margin-top: 1px;
-}
-.saved-item-del:hover { color: var(--head); }
-
-.empty-state {
-  font-size: 11px;
-  color: var(--muted);
-  padding: 8px 0;
-  font-style: italic;
-}
-
-/* ── Main output area ── */
-.main {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--off);
-}
-
-/* ── Output toolbar ── */
-.out-toolbar {
-  background: var(--white);
-  border-bottom: 1px solid var(--line);
-  padding: 0 20px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.out-label {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.out-toolbar-right {
-  margin-left: auto;
-  display: flex; gap: 6px;
-}
-
-.btn {
-  padding: 5px 12px;
-  border-radius: var(--radius-sm);
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.12s;
-  border: 1px solid transparent;
-  display: inline-flex; align-items: center; gap: 5px;
-  line-height: 1;
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--line);
-  color: var(--body);
-}
-.btn-ghost:hover { border-color: var(--line2); background: var(--off2); }
-
-.btn-solid {
-  background: var(--head);
-  border-color: var(--head);
-  color: var(--white);
-}
-.btn-solid:hover { opacity: 0.85; }
-
-.btn-save {
-  background: transparent;
-  border-color: var(--line);
-  color: var(--muted);
-}
-.btn-save:hover { border-color: var(--line2); color: var(--body); }
-
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn.copied { color: var(--green); border-color: currentColor; }
-
-/* ── Output body ── */
-.out-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* ── Prompt card ── */
-.prompt-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
-  animation: fadeUp 0.2s ease both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.prompt-card-head {
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-  background: var(--off);
-}
-
-.prompt-card-label {
-  display: flex; align-items: center; gap: 8px;
-}
-
-.variant-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.prompt-card-name {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.prompt-card-tag {
-  font-family: var(--mono);
-  font-size: 9px;
-  padding: 2px 6px;
-  border-radius: 100px;
-  letter-spacing: 0.04em;
-}
-
-.prompt-card-actions {
-  display: flex; gap: 5px;
-}
-
-.btn-icon {
-  width: 26px; height: 26px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--white);
-  color: var(--muted);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px;
-  transition: all 0.12s;
-}
-.btn-icon:hover { border-color: var(--line2); color: var(--body); }
-.btn-icon.copied { color: var(--green); border-color: var(--green); }
-
-.prompt-text {
-  padding: 14px;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  line-height: 1.75;
-  color: var(--body);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.prompt-text mark {
-  background: none;
-  color: var(--head);
-  font-weight: 500;
-}
-
-/* ── Live preview card ── */
-.live-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.live-card-head {
-  padding: 9px 14px;
-  border-bottom: 1px solid var(--line);
-  display: flex; align-items: center; justify-content: space-between;
-}
-
-.live-dot {
-  display: flex; align-items: center; gap: 6px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.live-dot::before {
-  content: '';
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--green);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-.live-text {
-  padding: 14px;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  line-height: 1.75;
-  color: var(--muted);
-  min-height: 72px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  transition: color 0.2s;
-}
-.live-text.has-content { color: var(--body); }
-
-/* ── Empty ── */
-.out-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.out-empty-icon {
-  width: 40px; height: 40px;
-  border: 1px dashed var(--line2);
-  border-radius: var(--radius);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-}
-
-/* ── Loading skeleton ── */
-.skeleton-wrap {
-  display: flex; flex-direction: column; gap: 12px;
-}
-
-.skeleton-card {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px;
-  display: flex; flex-direction: column; gap: 8px;
-}
-
-.skeleton-line {
-  height: 10px;
-  background: linear-gradient(90deg, var(--off) 25%, var(--off2) 50%, var(--off) 75%);
-  background-size: 200% 100%;
-  border-radius: 3px;
-  animation: shimmer 1.2s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* ── Toast ── */
-#toast {
-  position: fixed;
-  bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: var(--head); color: var(--white);
-  font-size: 12px; padding: 8px 16px;
-  border-radius: var(--radius);
-  opacity: 0; transition: opacity 0.2s;
-  pointer-events: none; z-index: 999;
-  font-family: var(--sans);
-}
-#toast.show { opacity: 1; }
-
-/* ── Responsive ── */
-@media (max-width: 680px) {
-  .app { grid-template-columns: 1fr; grid-template-rows: 44px auto 1fr; }
-  .sidebar { max-height: 40vh; border-right: none; border-bottom: 1px solid var(--line); }
-}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f5f4f1;--panel:#ffffff;--panel2:#faf9f7;
+    --line:#e8e5de;--line2:#d4d0c8;
+    --text:#1c1b18;--muted:#8a8680;--faint:#b8b4aa;
+    --accent:#1c1b18;--accent-r:28;--accent-g:27;--accent-b:24;
+    --blue:#2563eb;--green:#16a34a;--amber:#d97706;--red:#dc2626;
+    --mono:'IBM Plex Mono',monospace;--sans:'Geist',sans-serif;
+    --r:4px;--r2:6px;
+    --left:260px;--right:280px;
+  }
+  html,body,#root{height:100%;overflow:hidden;background:var(--bg)}
+  body{font-family:var(--sans);font-size:13px;color:var(--text);-webkit-font-smoothing:antialiased}
+  button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+  input,select,textarea{font-family:var(--sans)}
+
+  /* ── Shell ── */
+  .shell{display:flex;flex-direction:column;height:100vh}
+
+  /* ── Titlebar ── */
+  .titlebar{
+    height:40px;background:var(--panel);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0;
+    user-select:none;
+  }
+  .tb-logo{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--text);display:flex;align-items:center;gap:7px}
+  .tb-logo-mark{width:18px;height:18px;background:var(--text);border-radius:3px;display:flex;align-items:center;justify-content:center}
+  .tb-logo-mark svg{width:10px;height:10px;fill:white}
+  .tb-sep{width:1px;height:16px;background:var(--line2)}
+  .tb-file{font-size:12px;color:var(--muted)}
+  .tb-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+  .tb-mode-btn{
+    padding:3px 10px;border-radius:100px;border:1px solid var(--line);
+    font-size:11px;color:var(--muted);transition:all .12s;
+  }
+  .tb-mode-btn.active{background:var(--text);border-color:var(--text);color:#fff}
+  .tb-kbd{
+    font-family:var(--mono);font-size:9px;padding:1px 5px;
+    border-radius:3px;background:var(--bg);border:1px solid var(--line2);
+    color:var(--faint);
+  }
+
+  /* ── Body ── */
+  .body{flex:1;display:flex;overflow:hidden}
+
+  /* ── Left panel ── */
+  .left{
+    width:var(--left);flex-shrink:0;
+    background:var(--panel);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .panel-head{
+    height:36px;padding:0 12px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);flex-shrink:0;
+  }
+  .panel-title{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .panel-action{font-size:11px;color:var(--muted);padding:3px 7px;border-radius:var(--r);border:1px solid transparent;transition:all .12s}
+  .panel-action:hover{border-color:var(--line);color:var(--text)}
+
+  .blocks-scroll{flex:1;overflow-y:auto;padding:8px}
+  .blocks-scroll::-webkit-scrollbar{width:3px}
+  .blocks-scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+  /* ── Block ── */
+  .block{
+    border:1px solid var(--line);border-radius:var(--r2);
+    margin-bottom:6px;background:var(--panel2);
+    transition:border-color .12s,opacity .12s;
+    cursor:default;
+  }
+  .block:hover{border-color:var(--line2)}
+  .block.disabled{opacity:.45}
+  .block.dragging{opacity:.3}
+
+  .block-head{
+    padding:8px 10px;display:flex;align-items:center;gap:7px;
+  }
+  .block-drag{
+    width:14px;height:14px;display:flex;flex-direction:column;
+    justify-content:center;gap:3px;cursor:grab;flex-shrink:0;padding:1px;
+  }
+  .block-drag span{display:block;height:1.5px;background:var(--faint);border-radius:1px;transition:background .12s}
+  .block-drag:hover span{background:var(--muted)}
+  .block-drag:active{cursor:grabbing}
+
+  .block-toggle{
+    width:28px;height:16px;border-radius:100px;border:1px solid var(--line2);
+    background:var(--bg);position:relative;cursor:pointer;flex-shrink:0;transition:all .15s;
+  }
+  .block-toggle::after{
+    content:'';position:absolute;top:2px;left:2px;
+    width:10px;height:10px;border-radius:50%;background:var(--faint);transition:all .15s;
+  }
+  .block-toggle.on{background:var(--text);border-color:var(--text)}
+  .block-toggle.on::after{left:14px;background:#fff}
+
+  .block-label{flex:1;font-size:12px;font-weight:500;color:var(--text);min-width:0;truncate:ellipsis}
+  .block-type{font-family:var(--mono);font-size:9px;color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
+
+  .block-body{padding:0 10px 10px}
+
+  .block-value{
+    width:100%;background:var(--bg);border:1px solid var(--line);
+    border-radius:var(--r);padding:6px 8px;font-size:12px;color:var(--text);
+    outline:none;resize:none;transition:border-color .12s;line-height:1.5;
+  }
+  .block-value:focus{border-color:var(--line2);background:#fff}
+  .block-value::placeholder{color:var(--faint)}
+  select.block-value{appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23b8b4aa' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;
+  }
+
+  /* Weight slider */
+  .block-weight{display:flex;align-items:center;gap:8px;margin-top:7px}
+  .block-weight-label{font-family:var(--mono);font-size:10px;color:var(--faint);width:44px;flex-shrink:0}
+  .weight-track{flex:1;height:3px;background:var(--line);border-radius:2px;position:relative;cursor:pointer}
+  .weight-fill{height:100%;background:var(--text);border-radius:2px;transition:width .1s}
+  .weight-val{font-family:var(--mono);font-size:10px;color:var(--muted);width:20px;text-align:right;flex-shrink:0}
+  input[type=range].weight-input{
+    position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;margin:0;
+  }
+
+  /* Variant chips */
+  .block-variants{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+  .variant-chip{
+    padding:2px 8px;border-radius:100px;border:1px solid var(--line);
+    font-family:var(--mono);font-size:10px;color:var(--muted);cursor:pointer;
+    transition:all .1s;
+  }
+  .variant-chip.active{background:var(--text);border-color:var(--text);color:#fff}
+
+  /* ── Center canvas ── */
+  .center{
+    flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);
+  }
+  .canvas-toolbar{
+    height:36px;background:var(--panel);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;padding:0 12px;gap:6px;flex-shrink:0;
+  }
+  .canvas-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .canvas-body::-webkit-scrollbar{width:3px}
+  .canvas-body::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+  /* Prompt display card */
+  .prompt-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;
+    animation:slideIn .15s ease both;
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .prompt-card-head{
+    padding:9px 12px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--panel2);
+  }
+  .prompt-card-meta{display:flex;align-items:center;gap:8px}
+  .prompt-card-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .prompt-card-name{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .prompt-card-badge{
+    font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:100px;letter-spacing:.04em;
+  }
+  .prompt-card-body{padding:12px;font-family:var(--mono);font-size:11.5px;line-height:1.8;color:var(--muted);white-space:pre-wrap;word-break:break-all}
+  .prompt-card-body .seg-subject{color:var(--text);font-weight:500}
+  .prompt-card-body .seg-style{color:#7c3aed}
+  .prompt-card-body .seg-light{color:#d97706}
+  .prompt-card-body .seg-color{color:#059669}
+  .prompt-card-body .seg-quality{color:#2563eb}
+  .prompt-card-body .seg-suffix{color:var(--faint)}
+  .prompt-card-actions{display:flex;gap:4px}
+  .icon-btn{
+    width:26px;height:26px;border-radius:var(--r);border:1px solid var(--line);
+    background:var(--panel);color:var(--muted);display:flex;align-items:center;
+    justify-content:center;font-size:11px;cursor:pointer;transition:all .12s;
+  }
+  .icon-btn:hover{border-color:var(--line2);color:var(--text)}
+  .icon-btn.ok{color:var(--green);border-color:var(--green)}
+
+  /* Empty state */
+  .canvas-empty{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;color:var(--faint);
+  }
+  .canvas-empty-box{
+    width:44px;height:44px;border:1px dashed var(--line2);border-radius:var(--r2);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+  }
+  .canvas-empty p{font-size:12px;text-align:center;line-height:1.6}
+
+  /* Skeleton */
+  .skel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:12px;display:flex;flex-direction:column;gap:8px}
+  .skel-line{height:9px;border-radius:3px;background:linear-gradient(90deg,var(--panel2) 25%,var(--line) 50%,var(--panel2) 75%);background-size:200% 100%;animation:shim 1.2s ease-in-out infinite}
+  @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  /* ── Right inspector ── */
+  .right{
+    width:var(--right);flex-shrink:0;
+    background:var(--panel);border-left:1px solid var(--line);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .insp-tabs{
+    display:flex;border-bottom:1px solid var(--line);flex-shrink:0;
+  }
+  .insp-tab{
+    flex:1;height:36px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+    transition:all .12s;
+  }
+  .insp-tab.active{color:var(--text);border-bottom-color:var(--text)}
+  .insp-scroll{flex:1;overflow-y:auto;padding:12px}
+  .insp-scroll::-webkit-scrollbar{width:3px}
+  .insp-scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+  /* Inspector rows */
+  .insp-section{margin-bottom:16px}
+  .insp-section-label{
+    font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--faint);margin-bottom:8px;
+  }
+  .insp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .insp-key{font-size:11px;color:var(--muted)}
+  .insp-val{font-family:var(--mono);font-size:11px;color:var(--text);text-align:right}
+  .insp-val.colored{color:var(--green)}
+
+  /* Snapshot list */
+  .snap-list{display:flex;flex-direction:column;gap:5px}
+  .snap-item{
+    border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;
+    cursor:pointer;transition:border-color .12s;display:flex;align-items:flex-start;gap:6px;
+  }
+  .snap-item:hover{border-color:var(--line2)}
+  .snap-item-text{flex:1;font-size:11px;color:var(--muted);line-height:1.4;
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .snap-item-del{font-size:13px;color:var(--faint);flex-shrink:0;line-height:1;margin-top:1px}
+  .snap-item-del:hover{color:var(--text)}
+  .snap-item-ts{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:3px}
+  .snap-empty{font-size:11px;color:var(--faint);font-style:italic;padding:4px 0}
+
+  /* Shortcuts help */
+  .shortcut-list{display:flex;flex-direction:column;gap:5px}
+  .shortcut-row{display:flex;align-items:center;justify-content:space-between}
+  .shortcut-desc{font-size:11px;color:var(--muted)}
+  .shortcut-key{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:3px;background:var(--bg);border:1px solid var(--line2);color:var(--text)}
+
+  /* ── Buttons ── */
+  .btn{
+    padding:5px 12px;border-radius:var(--r);border:1px solid var(--line);
+    font-size:12px;font-weight:500;color:var(--muted);transition:all .12s;
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .btn:hover{border-color:var(--line2);color:var(--text)}
+  .btn-primary{background:var(--text);border-color:var(--text);color:#fff}
+  .btn-primary:hover{opacity:.85}
+  .btn-blue{background:var(--blue);border-color:var(--blue);color:#fff}
+  .btn-blue:hover{opacity:.85}
+
+  /* Toast */
+  #toast{
+    position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+    background:var(--text);color:#fff;font-size:12px;padding:7px 14px;
+    border-radius:var(--r2);opacity:0;transition:opacity .2s;pointer-events:none;z-index:999;
+  }
+  #toast.show{opacity:1}
+
+  /* Usage mode badge */
+  .mode-indicator{
+    font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:100px;
+    letter-spacing:.04em;text-transform:uppercase;
+  }
+  .mode-kv{background:#dbeafe;color:#1e40af}
+  .mode-illust{background:#ede9fe;color:#5b21b6}
+  .mode-sns{background:#dcfce7;color:#166534}
 </style>
 </head>
 <body>
-
-<div class="app">
-
-  <!-- Topbar -->
-  <header class="topbar">
-    <div class="topbar-logo">KV Studio</div>
-    <div class="topbar-divider"></div>
-    <span class="topbar-file">prompt-builder.workspace</span>
-    <div class="topbar-right">
-      <span class="topbar-badge">Commercial KV</span>
-      <span class="topbar-badge" id="savedCount">0 saved</span>
-    </div>
-  </header>
-
-  <!-- Sidebar -->
-  <aside class="sidebar">
-
-    <!-- Subject -->
-    <div class="section" id="sec-subject">
-      <div class="section-head" onclick="toggleSection('sec-subject')">
-        <span class="section-title">Subject</span>
-        <span class="section-caret">▼</span>
-      </div>
-      <div class="section-body">
-        <div class="field">
-          <label class="field-label">畫面主體 / Scene description</label>
-          <textarea class="control" id="subject" rows="4"
-            placeholder="e.g. 一位女性在候機室拿著信用卡，背景是落地窗與飛機跑道"></textarea>
-        </div>
-        <div class="field">
-          <label class="field-label">輔助元素 / Supporting elements</label>
-          <textarea class="control" id="supporting" rows="2"
-            placeholder="e.g. 信用卡特寫、行李、護照"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Composition -->
-    <div class="section" id="sec-comp">
-      <div class="section-head" onclick="toggleSection('sec-comp')">
-        <span class="section-title">Composition</span>
-        <span class="section-caret">▼</span>
-      </div>
-      <div class="section-body">
-        <div class="field">
-          <label class="field-label">構圖方式</label>
-          <div class="radio-group" id="comp-group">
-            <div class="radio-pill"><input type="radio" name="comp" id="c1" value="rule of thirds composition" checked><label for="c1">三分法</label></div>
-            <div class="radio-pill"><input type="radio" name="comp" id="c2" value="centered symmetrical composition"><label for="c2">置中</label></div>
-            <div class="radio-pill"><input type="radio" name="comp" id="c3" value="left-heavy composition, right side reserved for text"><label for="c3">左視覺右文案</label></div>
-            <div class="radio-pill"><input type="radio" name="comp" id="c4" value="right-heavy composition, left side reserved for text"><label for="c4">右視覺左文案</label></div>
-            <div class="radio-pill"><input type="radio" name="comp" id="c5" value="dynamic diagonal composition"><label for="c5">斜角動感</label></div>
-            <div class="radio-pill"><input type="radio" name="comp" id="c6" value="close-up product shot, macro detail"><label for="c6">商品特寫</label></div>
-          </div>
-        </div>
-        <div class="field">
-          <label class="field-label">畫面比例</label>
-          <div class="radio-group" id="ratio-group">
-            <div class="radio-pill"><input type="radio" name="ratio" id="r1" value="--ar 16:9" checked><label for="r1">16:9</label></div>
-            <div class="radio-pill"><input type="radio" name="ratio" id="r2" value="--ar 16:5"><label for="r2">16:5 Banner</label></div>
-            <div class="radio-pill"><input type="radio" name="ratio" id="r3" value="--ar 1:1"><label for="r3">1:1</label></div>
-            <div class="radio-pill"><input type="radio" name="ratio" id="r4" value="--ar 9:16"><label for="r4">9:16</label></div>
-            <div class="radio-pill"><input type="radio" name="ratio" id="r5" value="--ar 3:2"><label for="r5">3:2 KV</label></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Style -->
-    <div class="section" id="sec-style">
-      <div class="section-head" onclick="toggleSection('sec-style')">
-        <span class="section-title">Style</span>
-        <span class="section-caret">▼</span>
-      </div>
-      <div class="section-body">
-        <div class="field">
-          <label class="field-label">插畫風格</label>
-          <select class="control" id="style">
-            <optgroup label="── 寫實 / 攝影">
-              <option value="photorealistic, ultra-detailed photography, sharp focus">寫實攝影 (Photorealistic)</option>
-              <option value="minimalist product photography, clean white studio background, professional lighting">極簡產品棚拍 (Product Photography)</option>
-              <option value="luxury brand campaign photography, editorial fashion">奢品廣告攝影 (Luxury Campaign)</option>
-              <option value="cinematic film still, anamorphic lens, movie-quality render, 35mm film grain">電影質感 (Cinematic Film)</option>
-            </optgroup>
-            <optgroup label="── 動漫 / 插畫">
-              <option value="Japanese anime illustration style, vibrant colors, clean linework">動漫風格 (Anime Style)</option>
-              <option value="Japanese shoujo manga style, delicate linework, soft pastel tones, sparkle effects">日本少女漫畫 (Shoujo Manga)</option>
-              <option value="Japanese shounen manga style, bold linework, dynamic action composition">日本少年漫畫 (Shounen Manga)</option>
-              <option value="black and white shoujo manga, ink illustration, screen tone texture">日本黑白少女漫畫 (B&amp;W Shoujo)</option>
-              <option value="black and white shounen manga, high contrast ink, speed lines">日本黑白少年漫畫 (B&amp;W Shounen)</option>
-            </optgroup>
-            <optgroup label="── 扁平 / 向量">
-              <option value="flat vector illustration, clean geometric shapes, bold colors, no gradients">扁平化商業插畫 (Flat Vector)</option>
-              <option value="Japanese flat poster art style, retro travel poster aesthetic, limited color palette">日系扁平海報插畫 (Flat Poster Art)</option>
-              <option value="flat infographic illustration, isometric icons, modern data visualization style">現代扁平資訊圖表 (Flat Infographic)</option>
-              <option value="editorial illustration, magazine style, conceptual art, sophisticated composition">雜誌編輯風格插畫 (Editorial Illustration)</option>
-              <option value="flat vector logo design, minimalist icon, clean brand identity">扁平化商標設計 (Flat Vector Logo)</option>
-            </optgroup>
-            <optgroup label="── 3D / 數位">
-              <option value="3D render, glossy materials, depth of field, octane render, studio lighting">3D 渲染 (3D Animation)</option>
-              <option value="3D clay icon style, soft matte texture, pastel colors, cute chibi proportions">3D 黏土圖示 (3D Clay Icon)</option>
-              <option value="cyberpunk aesthetic, neon lights, rain-soaked streets, dystopian city, high contrast">賽博龐克 (Cyberpunk)</option>
-            </optgroup>
-            <optgroup label="── 藝術繪畫">
-              <option value="watercolor painting, soft washes, bleeding edges, delicate brushwork, paper texture">水彩畫 (Watercolor)</option>
-              <option value="oil painting, thick impasto brushstrokes, rich pigment, canvas texture, classical style">油畫 (Oil Painting)</option>
-              <option value="pop art style, bold outlines, Ben-Day dots, high saturation, Andy Warhol inspired">普普藝術 (Pop Art)</option>
-            </optgroup>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label">光影設定</label>
-          <select class="control" id="lighting">
-            <option value="dramatic cinematic lighting, volumetric light rays, deep shadows, god rays">戲劇電影光 (Cinematic Lighting)</option>
-            <option value="natural light, soft diffused sunlight, realistic outdoor illumination">自然光 (Natural Light)</option>
-            <option value="neon lights, colorful LED reflections, wet surface glow, cyberpunk illumination">霓虹燈 (Neon Lights)</option>
-            <option value="golden hour sunlight, warm amber backlight, long soft shadows, magic hour">黃金時刻 (Golden Hour)</option>
-            <option value="professional studio lighting, softbox, clean even illumination, product-grade">棚拍打光 (Studio Lighting)</option>
-            <option value="volumetric lighting, light shafts through atmosphere, god rays, dust particles">體積光 / 耶穌光 (Volumetric)</option>
-            <option value="soft diffuse lighting, overcast sky, shadowless, gentle wrap-around fill">柔和漫射光 (Soft Diffuse)</option>
-            <option value="rim lighting, glowing edges, backlit silhouette, halo effect">輪廓光 (Rim Lighting)</option>
-            <option value="high-key bright lighting, clean airy aesthetic, minimal shadows, lifestyle mood">高調明亮 (High-Key)</option>
-            <option value="low-key moody lighting, rich dark tones, chiaroscuro, deep shadows">低調暗調 (Low-Key)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label">色彩方向</label>
-          <select class="control" id="color">
-            <optgroup label="── 金融 / 商業">
-              <option value="deep navy blue and gold color palette, premium financial aesthetic, rich dark tones">深藍金融感 (Navy + Gold)</option>
-              <option value="monochromatic black and white with single gold accent, high contrast luxury">黑白金點綴 (B&amp;W + Gold)</option>
-              <option value="cool silver and midnight blue, tech fintech, metallic sheen">銀灰科技藍 (Silver + Blue)</option>
-              <option value="rich emerald green and champagne gold, wealth and prosperity">祖母綠香檳金 (Emerald + Champagne)</option>
-              <option value="deep burgundy and rose gold, luxury premium, sophisticated feminine">酒紅玫瑰金 (Burgundy + Rose Gold)</option>
-              <option value="charcoal grey and electric blue, modern corporate fintech">碳灰電藍 (Charcoal + Electric Blue)</option>
-              <option value="pure white and platinum silver, ultra clean minimal luxury">純白鉑金 (White + Platinum)</option>
-            </optgroup>
-            <optgroup label="── 生活 / 旅遊">
-              <option value="vibrant coral and white, energetic lifestyle, fresh tropical feel">珊瑚活力白 (Coral + White)</option>
-              <option value="warm terracotta and cream tones, earthy Mediterranean lifestyle">磚紅奶油 (Terracotta + Cream)</option>
-              <option value="muted sage green and warm beige, modern minimalist wellness">鼠尾草米色 (Sage + Beige)</option>
-              <option value="sky blue and sunny yellow, cheerful travel optimism, summer holiday">天空藍陽光黃 (Sky + Yellow)</option>
-              <option value="deep ocean teal and sandy beige, coastal luxury resort">海洋青砂米 (Teal + Sand)</option>
-              <option value="dusty rose and warm ivory, romantic soft feminine lifestyle">霧粉象牙 (Dusty Rose + Ivory)</option>
-              <option value="forest green and cognac brown, adventure outdoor premium">森林綠干邑棕 (Forest + Cognac)</option>
-            </optgroup>
-            <optgroup label="── 科技 / 未來">
-              <option value="neon cyan and deep purple, futuristic tech cyberpunk glow">電光青紫 (Cyan + Purple)</option>
-              <option value="electric blue and pure black, sleek tech product, minimal dark mode">電藍純黑 (Electric Blue + Black)</option>
-              <option value="holographic iridescent pastel, pearl shimmer, future luxury">全息彩虹珠光 (Holographic)</option>
-              <option value="neon green and dark charcoal, hacker aesthetic, terminal green">霓虹綠碳黑 (Neon Green + Charcoal)</option>
-            </optgroup>
-            <optgroup label="── 藝術 / 創意">
-              <option value="warm amber and deep indigo, moody artistic editorial contrast">琥珀靛藍 (Amber + Indigo)</option>
-              <option value="pastel rainbow soft gradient, dreamy kawaii, cotton candy palette">彩虹馬卡龍 (Pastel Rainbow)</option>
-              <option value="monochromatic warm sepia tones, nostalgic film photography">單色暖褐 (Sepia Monochrome)</option>
-              <option value="bold primary colors, red yellow blue, graphic design pop art energy">原色大膽 (Bold Primary)</option>
-            </optgroup>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quality -->
-    <div class="section" id="sec-quality">
-      <div class="section-head" onclick="toggleSection('sec-quality')">
-        <span class="section-title">Quality / Platform</span>
-        <span class="section-caret">▼</span>
-      </div>
-      <div class="section-body">
-        <div class="field">
-          <label class="field-label">品質詞</label>
-          <div class="radio-group">
-            <div class="radio-pill"><input type="radio" name="quality" id="q1" value="masterpiece, best quality, highly detailed, 8K resolution" checked><label for="q1">最高品質</label></div>
-            <div class="radio-pill"><input type="radio" name="quality" id="q2" value="professional quality, commercial grade"><label for="q2">商業級</label></div>
-            <div class="radio-pill"><input type="radio" name="quality" id="q3" value="award-winning photography, editorial quality"><label for="q3">得獎品質</label></div>
-          </div>
-        </div>
-        <div class="field">
-          <label class="field-label">平台後綴</label>
-          <select class="control" id="platform">
-            <option value="--v 6.1 --style raw --q 2 --stylize 750">Midjourney v6.1</option>
-            <option value="--v 6.1 --style raw --q 2">Midjourney v6.1 快速</option>
-            <option value="">Flux / SD (無後綴)</option>
-            <option value="--v 6.1 --no text, watermark, logo, blurry">MJ (含負面詞)</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Saved -->
-    <div class="section" id="sec-saved">
-      <div class="section-head" onclick="toggleSection('sec-saved')">
-        <span class="section-title">Saved Prompts</span>
-        <span class="section-caret">▼</span>
-      </div>
-      <div class="section-body">
-        <div class="saved-list" id="savedList">
-          <div class="empty-state">尚無儲存的 prompts</div>
-        </div>
-      </div>
-    </div>
-
-  </aside>
-
-  <!-- Main -->
-  <main class="main">
-    <div class="out-toolbar">
-      <span class="out-label">Output</span>
-      <div class="out-toolbar-right">
-        <button class="btn btn-save" onclick="saveCurrentPrompt()" title="儲存目前 prompt">
-          ⊕ Save
-        </button>
-        <button class="btn btn-ghost" onclick="copyMain()" id="copyMainBtn">
-          Copy
-        </button>
-        <button class="btn btn-solid" onclick="generateVariants()" id="variantBtn">
-          Generate 4 Variants
-        </button>
-      </div>
-    </div>
-
-    <div class="out-body" id="outBody">
-
-      <!-- Live preview -->
-      <div class="live-card">
-        <div class="live-card-head">
-          <div class="live-dot">Live preview</div>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">即時更新</span>
-        </div>
-        <div class="live-text" id="liveText">填寫左側欄位後，prompt 會即時顯示於此...</div>
-      </div>
-
-      <!-- Variants placeholder -->
-      <div class="out-empty" id="outEmpty">
-        <div class="out-empty-icon">◈</div>
-        <div>按下 <strong>Generate 4 Variants</strong> 產出多版本</div>
-      </div>
-
-    </div>
-  </main>
-
-</div>
-
+<div id="root"></div>
 <div id="toast"></div>
 
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script>
-// ── State ──
-let savedPrompts = JSON.parse(localStorage.getItem('kv_prompts') || '[]');
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
 
-// ── Build prompt ──
-function buildPrompt(overrides = {}) {
-  const subject    = overrides.subject    ?? document.getElementById('subject').value.trim();
-  const supporting = overrides.supporting ?? document.getElementById('supporting').value.trim();
-  const comp       = overrides.comp       ?? document.querySelector('input[name="comp"]:checked')?.value   ?? '';
-  const ratio      = overrides.ratio      ?? document.querySelector('input[name="ratio"]:checked')?.value  ?? '';
-  const style      = overrides.style      ?? document.getElementById('style').value;
-  const lighting   = overrides.lighting   ?? document.getElementById('lighting').value;
-  const color      = overrides.color      ?? document.getElementById('color').value;
-  const quality    = overrides.quality    ?? document.querySelector('input[name="quality"]:checked')?.value ?? '';
-  const platform   = overrides.platform   ?? document.getElementById('platform').value;
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const MODES=['KV','Illust','SNS'];
 
-  const parts = [];
-  if (subject)    parts.push(subject);
-  if (supporting) parts.push(supporting);
-  if (comp)       parts.push(comp);
-  if (style)      parts.push(style);
-  if (lighting)   parts.push(lighting);
-  if (color)      parts.push(color);
-  if (quality)    parts.push(quality);
-  const suffix = [ratio, platform].filter(Boolean).join(' ');
-  const prompt = parts.join(', ');
-  return suffix ? prompt + ' ' + suffix : prompt;
-}
-
-// ── Live update ──
-function liveUpdate() {
-  const p = buildPrompt();
-  const el = document.getElementById('liveText');
-  el.textContent = p || '填寫左側欄位後，prompt 會即時顯示於此...';
-  el.classList.toggle('has-content', p.length > 0);
-}
-
-// listen to all controls
-['subject','supporting','style','lighting','color','platform'].forEach(id => {
-  document.getElementById(id).addEventListener('input', liveUpdate);
-});
-document.querySelectorAll('input[type=radio]').forEach(r => {
-  r.addEventListener('change', liveUpdate);
-});
-
-// ── Copy main ──
-function copyMain() {
-  const p = buildPrompt();
-  if (!p) { showToast('先填寫主體描述'); return; }
-  navigator.clipboard.writeText(p).then(() => {
-    const btn = document.getElementById('copyMainBtn');
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-  });
-}
-
-// ── Save prompt ──
-function saveCurrentPrompt() {
-  const p = buildPrompt();
-  if (!p) { showToast('先填寫主體描述'); return; }
-  if (savedPrompts.includes(p)) { showToast('已儲存過此 prompt'); return; }
-  savedPrompts.unshift(p);
-  if (savedPrompts.length > 20) savedPrompts.pop();
-  localStorage.setItem('kv_prompts', JSON.stringify(savedPrompts));
-  renderSaved();
-  showToast('已儲存');
-}
-
-// ── Render saved ──
-function renderSaved() {
-  const list = document.getElementById('savedList');
-  document.getElementById('savedCount').textContent = savedPrompts.length + ' saved';
-  if (savedPrompts.length === 0) {
-    list.innerHTML = '<div class="empty-state">尚無儲存的 prompts</div>';
-    return;
-  }
-  list.innerHTML = savedPrompts.map((p, i) => `
-    <div class="saved-item" onclick="fillFromSaved(${i})">
-      <div class="saved-item-text">${esc(p)}</div>
-      <div class="saved-item-del" onclick="deleteSaved(event,${i})" title="刪除">×</div>
-    </div>
-  `).join('');
-}
-
-function fillFromSaved(i) {
-  const p = savedPrompts[i];
-  document.getElementById('liveText').textContent = p;
-  document.getElementById('liveText').classList.add('has-content');
-  // Fill into live preview and show in variants area
-  appendVariantCard(p, 'Saved', '#a09d94', 'SAVED', '#f7f6f3');
-  showToast('已回填至輸出');
-}
-
-function deleteSaved(e, i) {
-  e.stopPropagation();
-  savedPrompts.splice(i, 1);
-  localStorage.setItem('kv_prompts', JSON.stringify(savedPrompts));
-  renderSaved();
-}
-
-// ── Generate 4 variants ──
-const VARIANT_DEFS = [
-  {
-    label: 'Base',
-    tag: 'BASE',
-    color: '#1a1916',
-    tagBg: '#1a1916',
-    tagColor: '#ffffff',
-    overrides: {},
-  },
-  {
-    label: 'Alt Lighting',
-    tag: 'LIGHT',
-    color: '#d97706',
-    tagBg: '#fef3c7',
-    tagColor: '#92400e',
-    overrides: { lighting: 'golden hour natural light, warm backlight' },
-  },
-  {
-    label: 'Alt Composition',
-    tag: 'COMP',
-    color: '#2563eb',
-    tagBg: '#dbeafe',
-    tagColor: '#1e40af',
-    overrides: { comp: 'left-heavy composition, right side reserved for text' },
-  },
-  {
-    label: 'Dark Mood',
-    tag: 'DARK',
-    color: '#7c3aed',
-    tagBg: '#ede9fe',
-    tagColor: '#5b21b6',
-    overrides: {
-      lighting: 'low-key moody lighting, rich dark tones',
-      color: 'deep navy blue and gold color palette, premium financial aesthetic',
-      quality: 'masterpiece, best quality, highly detailed, 8K resolution',
-    },
-  },
+const STYLE_OPTIONS=[
+  {g:'寫實 / 攝影',opts:[
+    {v:'photorealistic, ultra-detailed photography, sharp focus',l:'寫實攝影'},
+    {v:'minimalist product photography, clean white studio background',l:'產品棚拍'},
+    {v:'luxury brand campaign photography, editorial fashion',l:'奢品廣告'},
+    {v:'cinematic film still, anamorphic lens, 35mm film grain',l:'電影質感'},
+  ]},
+  {g:'動漫 / 插畫',opts:[
+    {v:'Japanese anime illustration style, vibrant colors, clean linework',l:'動漫風格'},
+    {v:'Japanese shoujo manga style, delicate linework, soft pastel tones',l:'少女漫畫'},
+    {v:'Japanese shounen manga style, bold linework, dynamic composition',l:'少年漫畫'},
+    {v:'black and white shoujo manga, ink illustration, screen tone',l:'黑白少女漫'},
+    {v:'black and white shounen manga, high contrast ink, speed lines',l:'黑白少年漫'},
+  ]},
+  {g:'扁平 / 向量',opts:[
+    {v:'flat vector illustration, clean geometric shapes, bold colors',l:'扁平向量'},
+    {v:'Japanese flat poster art, retro travel poster, limited palette',l:'日系扁平海報'},
+    {v:'flat infographic illustration, isometric icons, data visualization',l:'扁平資訊圖'},
+    {v:'editorial illustration, magazine style, conceptual art',l:'雜誌編輯插畫'},
+    {v:'flat vector logo design, minimalist icon, clean brand identity',l:'扁平商標設計'},
+  ]},
+  {g:'3D / 數位',opts:[
+    {v:'3D render, glossy materials, depth of field, octane render',l:'3D 渲染'},
+    {v:'3D clay icon style, soft matte texture, pastel colors, chibi',l:'3D 黏土圖示'},
+    {v:'cyberpunk aesthetic, neon lights, rain-soaked streets, dystopian',l:'賽博龐克'},
+  ]},
+  {g:'藝術繪畫',opts:[
+    {v:'watercolor painting, soft washes, bleeding edges, paper texture',l:'水彩畫'},
+    {v:'oil painting, thick impasto brushstrokes, classical style',l:'油畫'},
+    {v:'pop art style, bold outlines, Ben-Day dots, Andy Warhol',l:'普普藝術'},
+  ]},
 ];
 
-function generateVariants() {
-  const subject = document.getElementById('subject').value.trim();
-  if (!subject) { showToast('請先填寫主體描述'); return; }
+const LIGHTING_OPTIONS=[
+  {v:'dramatic cinematic lighting, volumetric light rays, deep shadows',l:'戲劇電影光'},
+  {v:'natural light, soft diffused sunlight, realistic outdoor',l:'自然光'},
+  {v:'neon lights, colorful LED reflections, wet surface glow',l:'霓虹燈'},
+  {v:'golden hour sunlight, warm amber backlight, long soft shadows',l:'黃金時刻'},
+  {v:'professional studio lighting, softbox, clean even illumination',l:'棚拍打光'},
+  {v:'volumetric lighting, light shafts through atmosphere, god rays',l:'體積光 / 耶穌光'},
+  {v:'soft diffuse lighting, overcast sky, shadowless, gentle fill',l:'柔和漫射光'},
+  {v:'rim lighting, glowing edges, backlit silhouette, halo effect',l:'輪廓光'},
+  {v:'high-key bright lighting, clean airy aesthetic, minimal shadows',l:'高調明亮'},
+  {v:'low-key moody lighting, rich dark tones, chiaroscuro',l:'低調暗調'},
+];
 
-  clearVariants();
-  showSkeleton();
+const COLOR_OPTIONS=[
+  {g:'金融 / 商業',opts:[
+    {v:'deep navy blue and gold color palette, premium financial aesthetic',l:'深藍金融感'},
+    {v:'monochromatic black and white with single gold accent, luxury',l:'黑白金點綴'},
+    {v:'cool silver and midnight blue, tech fintech, metallic sheen',l:'銀灰科技藍'},
+    {v:'rich emerald green and champagne gold, wealth and prosperity',l:'祖母綠香檳金'},
+    {v:'deep burgundy and rose gold, luxury premium feminine',l:'酒紅玫瑰金'},
+    {v:'charcoal grey and electric blue, modern corporate fintech',l:'碳灰電藍'},
+    {v:'pure white and platinum silver, ultra clean minimal luxury',l:'純白鉑金'},
+  ]},
+  {g:'生活 / 旅遊',opts:[
+    {v:'vibrant coral and white, energetic lifestyle, fresh tropical',l:'珊瑚活力白'},
+    {v:'warm terracotta and cream tones, earthy Mediterranean lifestyle',l:'磚紅奶油'},
+    {v:'muted sage green and warm beige, modern minimalist wellness',l:'鼠尾草米色'},
+    {v:'sky blue and sunny yellow, cheerful travel optimism, summer',l:'天空藍陽光黃'},
+    {v:'deep ocean teal and sandy beige, coastal luxury resort',l:'海洋青砂米'},
+    {v:'dusty rose and warm ivory, romantic soft feminine lifestyle',l:'霧粉象牙'},
+    {v:'forest green and cognac brown, adventure outdoor premium',l:'森林綠干邑棕'},
+  ]},
+  {g:'科技 / 未來',opts:[
+    {v:'neon cyan and deep purple, futuristic tech cyberpunk glow',l:'電光青紫'},
+    {v:'electric blue and pure black, sleek tech product, dark mode',l:'電藍純黑'},
+    {v:'holographic iridescent pastel, pearl shimmer, future luxury',l:'全息彩虹珠光'},
+    {v:'neon green and dark charcoal, hacker aesthetic, terminal green',l:'霓虹綠碳黑'},
+  ]},
+  {g:'藝術 / 創意',opts:[
+    {v:'warm amber and deep indigo, moody artistic editorial contrast',l:'琥珀靛藍'},
+    {v:'pastel rainbow soft gradient, dreamy kawaii, cotton candy',l:'彩虹馬卡龍'},
+    {v:'monochromatic warm sepia tones, nostalgic film photography',l:'單色暖褐'},
+    {v:'bold primary colors, red yellow blue, graphic design pop art',l:'原色大膽'},
+  ]},
+];
 
-  setTimeout(() => {
-    clearVariants();
+const QUALITY_OPTIONS=[
+  {v:'masterpiece, best quality, highly detailed, 8K resolution',l:'最高品質'},
+  {v:'professional quality, commercial grade, print-ready',l:'商業級'},
+  {v:'award-winning photography, editorial quality',l:'得獎品質'},
+];
 
-    VARIANT_DEFS.forEach((def, i) => {
-      setTimeout(() => {
-        const prompt = buildPrompt(def.overrides);
-        appendVariantCard(prompt, def.label, def.color, def.tag, def.tagBg, def.tagColor);
-        const empty = document.getElementById('outEmpty');
-        if (empty) empty.remove();
-      }, i * 80);
-    });
-  }, 600);
-}
+const PLATFORM_OPTIONS=[
+  {v:'--v 6.1 --style raw --q 2 --stylize 750',l:'Midjourney v6.1'},
+  {v:'--v 6.1 --style raw --q 2',l:'MJ v6.1 快速'},
+  {v:'--v 6.1 --no text, watermark, logo, blurry',l:'MJ (含負面詞)'},
+  {v:'',l:'Flux / SD (無後綴)'},
+];
 
-function showSkeleton() {
-  const body = document.getElementById('outBody');
-  const sk = document.createElement('div');
-  sk.id = 'skeleton';
-  sk.className = 'skeleton-wrap';
-  sk.innerHTML = [1,2,3,4].map(() => `
-    <div class="skeleton-card">
-      <div class="skeleton-line" style="width:30%"></div>
-      <div class="skeleton-line" style="width:90%"></div>
-      <div class="skeleton-line" style="width:75%"></div>
-      <div class="skeleton-line" style="width:60%"></div>
-    </div>`).join('');
-  body.appendChild(sk);
-}
+const COMP_OPTIONS=[
+  {v:'rule of thirds composition',l:'三分法'},
+  {v:'centered symmetrical composition',l:'置中'},
+  {v:'left-heavy, right side reserved for text',l:'左視覺右文案'},
+  {v:'right-heavy, left side reserved for text',l:'右視覺左文案'},
+  {v:'dynamic diagonal composition',l:'斜角動感'},
+  {v:'close-up macro product shot',l:'商品特寫'},
+];
 
-function clearVariants() {
-  document.getElementById('skeleton')?.remove();
-  document.querySelectorAll('.prompt-card').forEach(c => c.remove());
-}
+const RATIO_OPTIONS=[
+  {v:'--ar 16:9',l:'16:9'},
+  {v:'--ar 16:5',l:'16:5 Banner'},
+  {v:'--ar 1:1',l:'1:1'},
+  {v:'--ar 9:16',l:'9:16'},
+  {v:'--ar 3:2',l:'3:2 KV'},
+  {v:'--ar 21:9',l:'21:9 電影'},
+];
 
-function appendVariantCard(prompt, label, dotColor, tag, tagBg, tagColor) {
-  const body = document.getElementById('outBody');
-  const card = document.createElement('div');
-  card.className = 'prompt-card';
-  const tagStyle = tagBg
-    ? `background:${tagBg};color:${tagColor};`
-    : `background:var(--off2);color:var(--muted);`;
+// Initial blocks
+const makeBlocks=()=>[
+  {id:'subject',  label:'主體描述',  type:'textarea',  enabled:true, weight:3, value:'',            variants:{A:'',B:'',C:''}, activeVariant:'A', category:'subject'},
+  {id:'support',  label:'輔助元素',  type:'textarea',  enabled:true, weight:2, value:'',            variants:{A:'',B:'',C:''}, activeVariant:'A', category:'subject'},
+  {id:'comp',     label:'構圖',      type:'radio',     enabled:true, weight:2, value:COMP_OPTIONS[0].v, variants:{A:COMP_OPTIONS[0].v,B:COMP_OPTIONS[2].v,C:COMP_OPTIONS[4].v}, activeVariant:'A', category:'layout', options:COMP_OPTIONS},
+  {id:'style',    label:'插畫風格',  type:'select',    enabled:true, weight:2, value:STYLE_OPTIONS[0].opts[0].v, variants:{A:STYLE_OPTIONS[0].opts[0].v,B:STYLE_OPTIONS[2].opts[0].v,C:STYLE_OPTIONS[3].opts[0].v}, activeVariant:'A', category:'style',   options:STYLE_OPTIONS},
+  {id:'lighting', label:'光影設定',  type:'select',    enabled:true, weight:2, value:LIGHTING_OPTIONS[0].v, variants:{A:LIGHTING_OPTIONS[0].v,B:LIGHTING_OPTIONS[3].v,C:LIGHTING_OPTIONS[1].v}, activeVariant:'A', category:'light',   options:LIGHTING_OPTIONS},
+  {id:'color',    label:'色彩方向',  type:'select',    enabled:true, weight:2, value:COLOR_OPTIONS[0].opts[0].v, variants:{A:COLOR_OPTIONS[0].opts[0].v,B:COLOR_OPTIONS[1].opts[0].v,C:COLOR_OPTIONS[2].opts[0].v}, activeVariant:'A', category:'color',   options:COLOR_OPTIONS},
+  {id:'quality',  label:'品質詞',    type:'select',    enabled:true, weight:1, value:QUALITY_OPTIONS[0].v, variants:{A:QUALITY_OPTIONS[0].v,B:QUALITY_OPTIONS[1].v,C:QUALITY_OPTIONS[2].v}, activeVariant:'A', category:'quality', options:QUALITY_OPTIONS},
+  {id:'ratio',    label:'畫面比例',  type:'radio',     enabled:true, weight:1, value:RATIO_OPTIONS[0].v,    variants:{A:RATIO_OPTIONS[0].v,B:RATIO_OPTIONS[2].v,C:RATIO_OPTIONS[3].v}, activeVariant:'A', category:'suffix',  options:RATIO_OPTIONS},
+  {id:'platform', label:'平台後綴',  type:'select',    enabled:true, weight:1, value:PLATFORM_OPTIONS[0].v, variants:{A:PLATFORM_OPTIONS[0].v,B:PLATFORM_OPTIONS[0].v,C:PLATFORM_OPTIONS[1].v}, activeVariant:'A', category:'suffix',  options:PLATFORM_OPTIONS},
+];
 
-  card.innerHTML = `
-    <div class="prompt-card-head">
-      <div class="prompt-card-label">
-        <div class="variant-dot" style="background:${dotColor}"></div>
-        <span class="prompt-card-name">${esc(label)}</span>
-        <span class="prompt-card-tag" style="${tagStyle}">${esc(tag)}</span>
-      </div>
-      <div class="prompt-card-actions">
-        <button class="btn-icon" title="複製" onclick="copyCard(this, \`${escJs(prompt)}\`)">⎘</button>
-        <button class="btn-icon" title="儲存" onclick="saveCard(\`${escJs(prompt)}\`)">⊕</button>
-      </div>
-    </div>
-    <div class="prompt-text">${highlightPrompt(prompt)}</div>
-  `;
-  body.appendChild(card);
-}
-
-// ── Highlight ──
-function highlightPrompt(text) {
-  // Bold the subject (first comma-separated segment)
-  const parts = text.split(', ');
-  if (parts.length === 0) return esc(text);
-  parts[0] = '<mark>' + esc(parts[0]) + '</mark>';
-  return parts.map((p, i) => i === 0 ? p : esc(p)).join(', ');
-}
-
-function copyCard(btn, text) {
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '⎘'; btn.classList.remove('copied'); }, 2000);
+// ─────────────────────────────────────────────
+// COMPOSE
+// ─────────────────────────────────────────────
+function composePrompt(blocks,variantKey='A'){
+  const get=(id)=>{
+    const b=blocks.find(b=>b.id===id);
+    if(!b||!b.enabled)return'';
+    const raw=variantKey&&b.variants?b.variants[variantKey]??b.value:b.value;
+    return raw||'';
+  };
+  const parts=[];
+  const suffix=[];
+  blocks.forEach(b=>{
+    if(!b.enabled)return;
+    const val=variantKey?b.variants[variantKey]??b.value:b.value;
+    if(!val)return;
+    if(b.category==='suffix'){suffix.push(val);}
+    else{parts.push(val);}
   });
+  return[parts.join(', '),suffix.join(' ')].filter(Boolean).join(' ');
 }
 
-function saveCard(text) {
-  if (savedPrompts.includes(text)) { showToast('已儲存過'); return; }
-  savedPrompts.unshift(text);
-  if (savedPrompts.length > 20) savedPrompts.pop();
-  localStorage.setItem('kv_prompts', JSON.stringify(savedPrompts));
-  renderSaved();
-  showToast('已儲存');
+function getSegments(blocks,variantKey='A'){
+  const cats={subject:[],layout:[],style:[],light:[],color:[],quality:[],suffix:[]};
+  blocks.forEach(b=>{
+    if(!b.enabled)return;
+    const val=variantKey?b.variants[variantKey]??b.value:b.value;
+    if(!val)return;
+    if(cats[b.category])cats[b.category].push(val);
+  });
+  return cats;
 }
 
-// ── Section toggle ──
-function toggleSection(id) {
-  document.getElementById(id).classList.toggle('collapsed');
+// ─────────────────────────────────────────────
+// HIGHLIGHT prompt
+// ─────────────────────────────────────────────
+function HighlightedPrompt({blocks,variantKey='A'}){
+  const segs=getSegments(blocks,variantKey);
+  const parts=[];
+  const push=(arr,cls)=>arr.forEach((s,i)=>parts.push(React.createElement('span',{key:cls+i,className:cls},s+(i<arr.length-1?', ':''))));
+  push(segs.subject,'seg-subject');
+  if(segs.subject.length&&(segs.layout.length||segs.style.length))parts.push(React.createElement('span',{key:'s0'},', '));
+  push(segs.layout,'seg-style');
+  if(segs.layout.length&&segs.style.length)parts.push(React.createElement('span',{key:'s1'},', '));
+  push(segs.style,'seg-style');
+  if((segs.layout.length||segs.style.length)&&segs.light.length)parts.push(React.createElement('span',{key:'s2'},', '));
+  push(segs.light,'seg-light');
+  if(segs.light.length&&segs.color.length)parts.push(React.createElement('span',{key:'s3'},', '));
+  push(segs.color,'seg-color');
+  if(segs.color.length&&segs.quality.length)parts.push(React.createElement('span',{key:'s4'},', '));
+  push(segs.quality,'seg-quality');
+  if(segs.quality.length&&segs.suffix.length)parts.push(React.createElement('span',{key:'s5'},' '));
+  push(segs.suffix,'seg-suffix');
+  return React.createElement('div',{className:'prompt-card-body'},parts);
 }
 
-// ── Toast ──
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
 let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2000);
 }
 
-// ── Utils ──
-function esc(s = '') {
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;');
-}
-function escJs(s = '') {
-  return String(s).replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+// ─────────────────────────────────────────────
+// COMPONENTS
+// ─────────────────────────────────────────────
+function WeightSlider({weight,onChange}){
+  return React.createElement('div',{className:'block-weight'},
+    React.createElement('span',{className:'block-weight-label'},'weight'),
+    React.createElement('div',{className:'weight-track'},
+      React.createElement('div',{className:'weight-fill',style:{width:(weight/5*100)+'%'}}),
+      React.createElement('input',{type:'range',className:'weight-input',min:1,max:5,value:weight,
+        onChange:e=>onChange(parseInt(e.target.value))})
+    ),
+    React.createElement('span',{className:'weight-val'},weight)
+  );
 }
 
-// ── Init ──
-renderSaved();
-liveUpdate();
+function VariantChips({active,onChange}){
+  return React.createElement('div',{className:'block-variants'},
+    ['A','B','C'].map(k=>
+      React.createElement('div',{key:k,className:'variant-chip'+(active===k?' active':''),
+        onClick:()=>onChange(k)},k)
+    )
+  );
+}
+
+function SelectWithGroups({value,onChange,options,isFlat}){
+  if(isFlat){
+    return React.createElement('select',{className:'block-value',value,onChange:e=>onChange(e.target.value)},
+      options.map(o=>React.createElement('option',{key:o.v,value:o.v},o.l))
+    );
+  }
+  return React.createElement('select',{className:'block-value',value,onChange:e=>onChange(e.target.value)},
+    options.map(g=>
+      React.createElement('optgroup',{key:g.g,label:'── '+g.g},
+        g.opts.map(o=>React.createElement('option',{key:o.v,value:o.v},o.l))
+      )
+    )
+  );
+}
+
+function RadioGroup({value,onChange,options}){
+  return React.createElement('div',{className:'block-variants',style:{flexWrap:'wrap'}},
+    options.map(o=>
+      React.createElement('div',{key:o.v,className:'variant-chip'+(value===o.v?' active':''),
+        onClick:()=>onChange(o.v),style:{fontSize:'10px'}},o.l)
+    )
+  );
+}
+
+function Block({block,index,onUpdate,onDragStart,onDragOver,onDrop,isDragging}){
+  const {id,label,type,enabled,weight,value,variants,activeVariant,category,options}=block;
+  const activeVal=variants[activeVariant]??value;
+
+  const update=(patch)=>onUpdate(id,patch);
+  const updateVariantVal=(val)=>{
+    const nv={...variants,[activeVariant]:val};
+    update({variants:nv,value:activeVariant==='A'?val:value});
+  };
+
+  return React.createElement('div',{
+    className:'block'+(enabled?'':' disabled')+(isDragging?' dragging':''),
+    draggable:true,
+    onDragStart:e=>onDragStart(e,index),
+    onDragOver:e=>onDragOver(e,index),
+    onDrop:e=>onDrop(e,index),
+  },
+    React.createElement('div',{className:'block-head'},
+      React.createElement('div',{className:'block-drag',title:'拖曳排序'},
+        React.createElement('span'),React.createElement('span'),React.createElement('span')
+      ),
+      React.createElement('div',{className:'block-toggle'+(enabled?' on':''),
+        onClick:()=>update({enabled:!enabled})}),
+      React.createElement('div',{className:'block-label'},label),
+      React.createElement('span',{className:'block-type'},category)
+    ),
+    enabled&&React.createElement('div',{className:'block-body'},
+      type==='textarea'&&React.createElement('textarea',{
+        className:'block-value',rows:3,value:activeVal,placeholder:'輸入描述…',
+        onChange:e=>updateVariantVal(e.target.value)
+      }),
+      type==='select'&&React.createElement(SelectWithGroups,{
+        value:activeVal,onChange:updateVariantVal,
+        options,isFlat:!options[0]?.opts
+      }),
+      type==='radio'&&React.createElement(RadioGroup,{value:activeVal,onChange:updateVariantVal,options}),
+      React.createElement(WeightSlider,{weight,onChange:w=>update({weight:w})}),
+      React.createElement(VariantChips,{active:activeVariant,onChange:k=>{
+        update({activeVariant:k});
+      }})
+    )
+  );
+}
+
+function PromptCard({blocks,variantKey,label,color,badge,badgeBg,badgeColor,dotColor}){
+  const [copied,setCopied]=useState(false);
+  const prompt=composePrompt(blocks,variantKey);
+  const copy=()=>{
+    if(!prompt)return;
+    navigator.clipboard.writeText(prompt).then(()=>{
+      setCopied(true);setTimeout(()=>setCopied(false),2000);
+    });
+  };
+  if(!prompt)return null;
+  return React.createElement('div',{className:'prompt-card'},
+    React.createElement('div',{className:'prompt-card-head'},
+      React.createElement('div',{className:'prompt-card-meta'},
+        React.createElement('div',{className:'prompt-card-dot',style:{background:dotColor||'#888'}}),
+        React.createElement('span',{className:'prompt-card-name'},label),
+        badge&&React.createElement('span',{className:'prompt-card-badge',style:{background:badgeBg||'#f5f4f1',color:badgeColor||'#888'}},badge)
+      ),
+      React.createElement('div',{className:'prompt-card-actions'},
+        React.createElement('button',{className:'icon-btn'+(copied?' ok':''),onClick:copy,title:'複製'},
+          copied?'✓':'⎘'
+        )
+      )
+    ),
+    React.createElement(HighlightedPrompt,{blocks,variantKey})
+  );
+}
+
+// ─────────────────────────────────────────────
+// MAIN APP
+// ─────────────────────────────────────────────
+function App(){
+  const [blocks,setBlocks]=useState(makeBlocks);
+  const [mode,setMode]=useState(0);// 0=KV,1=Illust,2=SNS
+  const [activeTab,setActiveTab]=useState(0);// 0=Inspector,1=Snapshots,2=Shortcuts
+  const [showVariants,setShowVariants]=useState(false);
+  const [loading,setLoading]=useState(false);
+  const [snapshots,setSnapshots]=useState(()=>JSON.parse(localStorage.getItem('ps_snaps')||'[]'));
+  const dragSrc=useRef(null);
+
+  // live prompt (variant A)
+  const livePrompt=useMemo(()=>composePrompt(blocks,'A'),[blocks]);
+
+  const updateBlock=(id,patch)=>{
+    setBlocks(prev=>prev.map(b=>b.id===id?{...b,...patch}:b));
+    setShowVariants(false);
+  };
+
+  // drag reorder
+  const handleDragStart=(e,i)=>{dragSrc.current=i;e.dataTransfer.effectAllowed='move'};
+  const handleDragOver=(e,i)=>{e.preventDefault()};
+  const handleDrop=(e,i)=>{
+    e.preventDefault();
+    const src=dragSrc.current;
+    if(src===null||src===i)return;
+    setBlocks(prev=>{
+      const a=[...prev];
+      const [item]=a.splice(src,1);
+      a.splice(i,0,item);
+      return a;
+    });
+    dragSrc.current=null;
+    setShowVariants(false);
+  };
+
+  // reset
+  const resetBlocks=()=>{setBlocks(makeBlocks());setShowVariants(false);toast('已重置所有 blocks')};
+
+  // generate variants
+  const generateVariants=()=>{
+    if(!livePrompt){toast('請先填寫主體描述');return;}
+    setLoading(true);setShowVariants(false);
+    setTimeout(()=>{setLoading(false);setShowVariants(true);},500);
+  };
+
+  // snapshot
+  const saveSnapshot=()=>{
+    if(!livePrompt){toast('請先填寫主體描述');return;}
+    const snap={id:Date.now(),prompt:livePrompt,blocks:JSON.parse(JSON.stringify(blocks)),ts:new Date().toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})};
+    const next=[snap,...snapshots].slice(0,20);
+    setSnapshots(next);localStorage.setItem('ps_snaps',JSON.stringify(next));
+    toast('快照已儲存');
+  };
+  const loadSnapshot=(snap)=>{
+    setBlocks(snap.blocks);setShowVariants(false);toast('已回填快照');
+  };
+  const deleteSnapshot=(id,e)=>{
+    e.stopPropagation();
+    const next=snapshots.filter(s=>s.id!==id);
+    setSnapshots(next);localStorage.setItem('ps_snaps',JSON.stringify(next));
+  };
+
+  // copy main
+  const copyMain=()=>{
+    if(!livePrompt){toast('請先填寫主體描述');return;}
+    navigator.clipboard.writeText(livePrompt).then(()=>toast('已複製'));
+  };
+
+  // shortcuts
+  useEffect(()=>{
+    const handler=(e)=>{
+      if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+      const k=e.key;
+      if(k==='1')setMode(0);
+      else if(k==='2')setMode(1);
+      else if(k==='3')setMode(2);
+      else if(k==='l'||k==='L')setActiveTab(0);
+      else if(k==='s'||k==='S')setActiveTab(1);
+      else if(k==='c'||k==='C')copyMain();
+      else if(k==='v'||k==='V')generateVariants();
+      else if(k==='n'||k==='N')saveSnapshot();
+    };
+    window.addEventListener('keydown',handler);
+    return()=>window.removeEventListener('keydown',handler);
+  },[livePrompt,blocks]);
+
+  const modeLabel=['KV','Illust','SNS'][mode];
+  const modeClass=['mode-kv','mode-illust','mode-sns'][mode];
+
+  // Inspector stats
+  const enabledCount=blocks.filter(b=>b.enabled).length;
+  const tokenCount=livePrompt.split(/,\s*|\s+/).filter(Boolean).length;
+
+  const VARIANT_CONFIGS=[
+    {key:'A',label:'Variant A — Base',dotColor:'#1c1b18',badge:'BASE',badgeBg:'#f5f4f1',badgeColor:'#8a8680'},
+    {key:'B',label:'Variant B — Alt',dotColor:'#d97706',badge:'ALT',badgeBg:'#fef3c7',badgeColor:'#92400e'},
+    {key:'C',label:'Variant C — Dark',dotColor:'#7c3aed',badge:'DARK',badgeBg:'#ede9fe',badgeColor:'#5b21b6'},
+  ];
+
+  return React.createElement('div',{className:'shell'},
+    // ── Titlebar
+    React.createElement('header',{className:'titlebar'},
+      React.createElement('div',{className:'tb-logo'},
+        React.createElement('div',{className:'tb-logo-mark'},
+          React.createElement('svg',{viewBox:'0 0 10 10'},
+            React.createElement('rect',{x:1,y:1,width:3,height:3}),
+            React.createElement('rect',{x:6,y:1,width:3,height:3}),
+            React.createElement('rect',{x:1,y:6,width:3,height:3}),
+            React.createElement('rect',{x:6,y:6,width:3,height:3})
+          )
+        ),
+        'Prompt Studio'
+      ),
+      React.createElement('div',{className:'tb-sep'}),
+      React.createElement('span',{className:'tb-file'},'prompt.workspace'),
+      React.createElement('div',{className:'tb-right'},
+        React.createElement('span',{className:'mode-indicator '+modeClass},modeLabel),
+        MODES.map((m,i)=>React.createElement('button',{key:m,
+          className:'tb-mode-btn'+(mode===i?' active':''),
+          onClick:()=>setMode(i)},m)),
+        React.createElement('span',{className:'tb-kbd'},'1/2/3')
+      )
+    ),
+
+    React.createElement('div',{className:'body'},
+
+      // ── Left: Blocks
+      React.createElement('aside',{className:'left'},
+        React.createElement('div',{className:'panel-head'},
+          React.createElement('span',{className:'panel-title'},'Blocks'),
+          React.createElement('button',{className:'panel-action',onClick:resetBlocks},'Reset')
+        ),
+        React.createElement('div',{className:'blocks-scroll'},
+          blocks.map((block,i)=>
+            React.createElement(Block,{key:block.id,block,index:i,
+              onUpdate:updateBlock,
+              onDragStart:handleDragStart,
+              onDragOver:handleDragOver,
+              onDrop:handleDrop,
+              isDragging:dragSrc.current===i
+            })
+          )
+        )
+      ),
+
+      // ── Center: Canvas
+      React.createElement('main',{className:'center'},
+        React.createElement('div',{className:'canvas-toolbar'},
+          React.createElement('span',{style:{fontFamily:'var(--mono)',fontSize:'10px',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em'}},'Canvas'),
+          React.createElement('div',{style:{marginLeft:'auto',display:'flex',gap:'6px'}},
+            React.createElement('button',{className:'btn',onClick:copyMain},'⎘ Copy'),
+            React.createElement('button',{className:'btn',onClick:saveSnapshot},'⊕ Save  ',React.createElement('span',{className:'tb-kbd',style:{marginLeft:'2px'}},'N')),
+            React.createElement('button',{className:'btn btn-primary',onClick:generateVariants},'Generate A/B/C ',React.createElement('span',{className:'tb-kbd',style:{marginLeft:'2px',background:'rgba(255,255,255,.12)',borderColor:'rgba(255,255,255,.2)',color:'rgba(255,255,255,.7)'}},'V'))
+          )
+        ),
+        React.createElement('div',{className:'canvas-body'},
+          // Live card always on top
+          React.createElement(PromptCard,{blocks,variantKey:'A',label:'Live Preview',dotColor:'#16a34a',badge:'LIVE',badgeBg:'#dcfce7',badgeColor:'#166534'}),
+
+          // Skeleton
+          loading&&React.createElement('div',{},
+            [1,2,3].map(i=>React.createElement('div',{key:i,className:'skel',style:{animationDelay:i*.08+'s'}},
+              React.createElement('div',{className:'skel-line',style:{width:'25%'}}),
+              React.createElement('div',{className:'skel-line',style:{width:'95%'}}),
+              React.createElement('div',{className:'skel-line',style:{width:'80%'}}),
+              React.createElement('div',{className:'skel-line',style:{width:'60%'}})
+            ))
+          ),
+
+          // Variants
+          showVariants&&VARIANT_CONFIGS.map(cfg=>
+            React.createElement(PromptCard,{key:cfg.key,...cfg,blocks})
+          ),
+
+          // Empty hint
+          !livePrompt&&!showVariants&&React.createElement('div',{className:'canvas-empty'},
+            React.createElement('div',{className:'canvas-empty-box'},'◈'),
+            React.createElement('p',{},'在左側填寫主體描述\n即時預覽 prompt 組合')
+          )
+        )
+      ),
+
+      // ── Right: Inspector
+      React.createElement('aside',{className:'right'},
+        React.createElement('div',{className:'insp-tabs'},
+          [['Inspector','L'],['Snapshots','S'],['Shortcuts','?']].map(([t,k],i)=>
+            React.createElement('div',{key:t,className:'insp-tab'+(activeTab===i?' active':''),
+              onClick:()=>setActiveTab(i)},t)
+          )
+        ),
+        React.createElement('div',{className:'insp-scroll'},
+
+          // Inspector tab
+          activeTab===0&&React.createElement('div',{},
+            React.createElement('div',{className:'insp-section'},
+              React.createElement('div',{className:'insp-section-label'},'Prompt Stats'),
+              React.createElement('div',{className:'insp-row'},
+                React.createElement('span',{className:'insp-key'},'Blocks enabled'),
+                React.createElement('span',{className:'insp-val colored'},enabledCount+' / '+blocks.length)
+              ),
+              React.createElement('div',{className:'insp-row'},
+                React.createElement('span',{className:'insp-key'},'Token estimate'),
+                React.createElement('span',{className:'insp-val'},tokenCount)
+              ),
+              React.createElement('div',{className:'insp-row'},
+                React.createElement('span',{className:'insp-key'},'Char length'),
+                React.createElement('span',{className:'insp-val'},livePrompt.length)
+              ),
+              React.createElement('div',{className:'insp-row'},
+                React.createElement('span',{className:'insp-key'},'Snapshots'),
+                React.createElement('span',{className:'insp-val'},snapshots.length)
+              ),
+            ),
+            React.createElement('div',{className:'insp-section'},
+              React.createElement('div',{className:'insp-section-label'},'Usage Mode'),
+              React.createElement('div',{className:'insp-row'},
+                React.createElement('span',{className:'insp-key'},'Current mode'),
+                React.createElement('span',{className:'insp-val colored'},MODES[mode])
+              ),
+              React.createElement('div',{className:'insp-row'},
+                React.createElement('span',{className:'insp-key'},'Aspect ratio'),
+                React.createElement('span',{className:'insp-val'},
+                  mode===0?'16:9 / 16:5':mode===1?'1:1 / 3:4':'9:16 / 1:1')
+              ),
+              React.createElement('div',{className:'insp-row'},
+                React.createElement('span',{className:'insp-key'},'Style focus'),
+                React.createElement('span',{className:'insp-val'},
+                  mode===0?'Commercial':mode===1?'Artistic':'Lifestyle')
+              ),
+            ),
+            React.createElement('div',{className:'insp-section'},
+              React.createElement('div',{className:'insp-section-label'},'Color Legend'),
+              [
+                {label:'Subject',cls:'seg-subject',color:'#1c1b18'},
+                {label:'Style / Comp',cls:'seg-style',color:'#7c3aed'},
+                {label:'Lighting',cls:'seg-light',color:'#d97706'},
+                {label:'Color',cls:'seg-color',color:'#059669'},
+                {label:'Quality',cls:'seg-quality',color:'#2563eb'},
+                {label:'Suffix',cls:'seg-suffix',color:'#b8b4aa'},
+              ].map(row=>
+                React.createElement('div',{key:row.label,className:'insp-row'},
+                  React.createElement('span',{className:'insp-key'},row.label),
+                  React.createElement('span',{style:{width:10,height:10,borderRadius:'50%',background:row.color,display:'inline-block'}})
+                )
+              )
+            ),
+          ),
+
+          // Snapshots tab
+          activeTab===1&&React.createElement('div',{},
+            React.createElement('div',{className:'insp-section'},
+              React.createElement('div',{className:'insp-section-label'},'Saved Snapshots'),
+              snapshots.length===0
+                ?React.createElement('div',{className:'snap-empty'},'尚無快照，按 N 儲存當前狀態')
+                :React.createElement('div',{className:'snap-list'},
+                  snapshots.map(snap=>
+                    React.createElement('div',{key:snap.id,className:'snap-item',onClick:()=>loadSnapshot(snap)},
+                      React.createElement('div',{style:{flex:1}},
+                        React.createElement('div',{className:'snap-item-text'},snap.prompt),
+                        React.createElement('div',{className:'snap-item-ts'},snap.ts)
+                      ),
+                      React.createElement('div',{className:'snap-item-del',onClick:(e)=>deleteSnapshot(snap.id,e)},'×')
+                    )
+                  )
+                )
+            )
+          ),
+
+          // Shortcuts tab
+          activeTab===2&&React.createElement('div',{},
+            React.createElement('div',{className:'insp-section'},
+              React.createElement('div',{className:'insp-section-label'},'Keyboard Shortcuts'),
+              React.createElement('div',{className:'shortcut-list'},
+                [
+                  ['切換 KV 模式','1'],
+                  ['切換 Illust 模式','2'],
+                  ['切換 SNS 模式','3'],
+                  ['Inspector 面板','L'],
+                  ['Snapshots 面板','S'],
+                  ['複製 prompt','C'],
+                  ['生成 A/B/C 變體','V'],
+                  ['儲存快照','N'],
+                ].map(([desc,key])=>
+                  React.createElement('div',{key,className:'shortcut-row',style:{marginBottom:'7px'}},
+                    React.createElement('span',{className:'shortcut-desc'},desc),
+                    React.createElement('span',{className:'shortcut-key'},key)
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 </script>
 </body>
 </html>
