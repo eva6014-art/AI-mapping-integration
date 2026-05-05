@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fintech Prompt Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0f1218;
+    --bg3: #151a22;
+    --bg4: #1c2330;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --gold: #c9a84c;
+    --gold2: #e8c96a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --gold-glow: rgba(201,168,76,0.08);
+    --text: #e8eaf0;
+    --text2: #8892a4;
+    --text3: #505a6a;
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.1);
+    --red: #f87171;
+    --green: #4ade80;
+    --r: 6px;
+    --r2: 10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Noise texture overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── Grid background ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .logo-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--gold), #8b6914);
+    border-radius: 6px;
+    font-size: 16px; font-weight: 800; color: #0a0c10;
+  }
+
+  .header-left p {
+    margin-top: 4px;
+    font-size: 13px; color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── API Key bar ── */
+  .api-bar {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .api-bar label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--text3); text-transform: uppercase; white-space: nowrap;
+  }
+
+  .api-bar input {
+    flex: 1;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 8px 12px;
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .api-bar input:focus { border-color: var(--gold); }
+
+  .api-save-btn {
+    padding: 8px 16px;
+    background: var(--gold-dim); border: 1px solid var(--gold);
+    border-radius: var(--r); color: var(--gold); font-size: 12px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: background 0.2s;
+    font-family: 'Syne', sans-serif;
+  }
+  .api-save-btn:hover { background: rgba(201,168,76,0.25); }
+
+  /* ── Two-column layout ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 720px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Panel ── */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .panel-head .step-num {
+    width: 20px; height: 20px;
+    background: var(--gold-dim); border: 1px solid var(--gold);
+    border-radius: 4px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--gold); flex-shrink: 0;
+  }
+
+  .panel-head h2 {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    letter-spacing: 0.03em;
+  }
+
+  .panel-body { padding: 18px; }
+
+  /* ── Field ── */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    display: block;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 7px;
+  }
+
+  .field textarea {
+    width: 100%;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 10px 12px;
+    color: var(--text); font-size: 13px; line-height: 1.6;
+    resize: vertical; outline: none; transition: border-color 0.2s;
+    font-family: 'Syne', sans-serif;
+    min-height: 80px;
+  }
+  .field textarea:focus { border-color: var(--border2); }
+
+  /* ── Spec grid ── */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .spec-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 10px 12px;
+    cursor: pointer; transition: all 0.18s;
+    position: relative;
+  }
+  .spec-card:hover { border-color: var(--border2); }
+  .spec-card.active {
+    border-color: var(--gold);
+    background: var(--gold-glow);
+  }
+  .spec-card.active::after {
+    content: '✓';
+    position: absolute; top: 6px; right: 8px;
+    font-size: 10px; color: var(--gold); font-weight: 700;
+  }
+
+  .spec-card .spec-name {
+    font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px;
+  }
+  .spec-card .spec-size {
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3);
+  }
+  .spec-card .spec-tag {
+    display: inline-block; margin-top: 5px;
+    font-size: 10px; color: var(--teal);
+    background: var(--teal-dim); border-radius: 3px; padding: 1px 6px;
+  }
+
+  /* ── Style tokens ── */
+  .token-wrap {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .token {
+    padding: 5px 10px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; font-size: 11px; color: var(--text2);
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .token:hover { border-color: var(--border2); color: var(--text); }
+  .token.active {
+    background: var(--gold-dim); border-color: var(--gold); color: var(--gold);
+  }
+
+  /* ── Select ── */
+  .field select {
+    width: 100%;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 9px 12px;
+    color: var(--text); font-size: 13px;
+    outline: none; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23505a6a' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 32px;
+    font-family: 'Syne', sans-serif;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px; background: var(--border); margin: 16px 0;
+  }
+
+  /* ── Variant count ── */
+  .variant-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .variant-row label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .count-btns { display: flex; gap: 4px; }
+  .count-btn {
+    width: 30px; height: 30px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text2); font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .count-btn:hover { border-color: var(--border2); color: var(--text); }
+  .count-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+  /* ── Generate button ── */
+  .gen-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, #c9a84c, #8b6914);
+    border: none; border-radius: var(--r);
+    color: #0a0c10; font-size: 14px; font-weight: 800;
+    letter-spacing: 0.04em; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: 'Syne', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .gen-btn:hover { opacity: 0.9; }
+  .gen-btn:active { transform: scale(0.99); }
+  .gen-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── Output panel ── */
+  .output-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    min-height: 500px;
+    display: flex; flex-direction: column;
+  }
+
+  .output-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .output-head h2 {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    letter-spacing: 0.03em; display: flex; align-items: center; gap: 8px;
+  }
+
+  .output-actions { display: flex; gap: 8px; }
+
+  .small-btn {
+    padding: 5px 12px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text2); font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; font-family: 'Syne', sans-serif;
+  }
+  .small-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  .output-body { flex: 1; padding: 18px; }
+
+  /* ── Placeholder ── */
+  .placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 400px; gap: 12px; text-align: center;
+  }
+  .placeholder-icon {
+    width: 48px; height: 48px;
+    border: 1px solid var(--border2); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: var(--text3);
+  }
+  .placeholder p { font-size: 13px; color: var(--text3); }
+
+  /* ── Variant cards ── */
+  .variants-wrap { display: flex; flex-direction: column; gap: 16px; }
+
+  .variant-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r2); overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .variant-card:hover { border-color: var(--border2); }
+
+  .variant-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .variant-label {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .variant-badge {
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  }
+  .variant-badge.v1 { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .variant-badge.v2 { background: rgba(45,212,191,0.1); color: var(--teal); }
+  .variant-badge.v3 { background: rgba(167,139,250,0.12); color: #a78bfa; }
+
+  .variant-name {
+    font-size: 12px; font-weight: 700; color: var(--text);
+  }
+
+  .variant-copy-btn {
+    padding: 4px 10px;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text3); font-size: 11px;
+    cursor: pointer; transition: all 0.15s; font-family: 'Syne', sans-serif;
+  }
+  .variant-copy-btn:hover { border-color: var(--border2); color: var(--text); }
+  .variant-copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+  .variant-body { padding: 14px; }
+
+  .prompt-section { margin-bottom: 12px; }
+  .prompt-section:last-child { margin-bottom: 0; }
+
+  .prompt-lang {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .prompt-lang::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .prompt-text {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 10px 12px;
+    font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.7;
+    color: var(--text2); white-space: pre-wrap; word-break: break-all;
+  }
+
+  /* ── Seed row ── */
+  .seed-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .seed-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text3);
+  }
+  .seed-val {
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gold);
+  }
+  .seed-copy {
+    margin-left: auto; font-size: 10px; color: var(--text3);
+    cursor: pointer; padding: 2px 6px;
+    border: 1px solid var(--border); border-radius: 3px; transition: all 0.15s;
+    font-family: 'Syne', sans-serif;
+  }
+  .seed-copy:hover { color: var(--text2); border-color: var(--border2); }
+
+  /* ── Loading ── */
+  .loading-wrap {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 300px; gap: 16px;
+  }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text3);
+  }
+
+  /* ── Progress bar ── */
+  .progress-bar {
+    height: 2px; background: var(--border);
+    border-radius: 1px; margin-bottom: 16px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2));
+    border-radius: 1px; width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Error ── */
+  .error-box {
+    background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25);
+    border-radius: var(--r); padding: 12px 14px; margin-top: 12px;
+    font-size: 13px; color: var(--red);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-left">
+      <h1><span class="logo-mark">F</span> Fintech Prompt Studio</h1>
+      <p>商業規格預設 × 一鍵多變體生成 — for 金融設計師</p>
+    </div>
+  </header>
+
+  <!-- API Key -->
+  <div class="api-bar">
+    <label>Gemini API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="AIza...">
+    <button class="api-save-btn" onclick="saveKey()">儲存</button>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Left: Input panel -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Spec templates -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="step-num">①</div>
+          <h2>商業規格預設</h2>
+        </div>
+        <div class="panel-body">
+
+          <div class="field">
+            <label>輸出規格</label>
+            <div class="spec-grid" id="specGrid">
+              <div class="spec-card active" data-spec="banner" onclick="selectSpec(this)">
+                <div class="spec-name">主視覺 Banner</div>
+                <div class="spec-size">1920 × 600 px</div>
+                <span class="spec-tag">留白左側</span>
+              </div>
+              <div class="spec-card" data-spec="kv" onclick="selectSpec(this)">
+                <div class="spec-name">活動 KV</div>
+                <div class="spec-size">1200 × 800 px</div>
+                <span class="spec-tag">置中構圖</span>
+              </div>
+              <div class="spec-card" data-spec="social" onclick="selectSpec(this)">
+                <div class="spec-name">社群方形</div>
+                <div class="spec-size">1080 × 1080 px</div>
+                <span class="spec-tag">1:1</span>
+              </div>
+              <div class="spec-card" data-spec="story" onclick="selectSpec(this)">
+                <div class="spec-name">限時動態</div>
+                <div class="spec-size">1080 × 1920 px</div>
+                <span class="spec-tag">9:16</span>
+              </div>
+              <div class="spec-card" data-spec="edm" onclick="selectSpec(this)">
+                <div class="spec-name">EDM 主圖</div>
+                <div class="spec-size">600 × 300 px</div>
+                <span class="spec-tag">文字空間大</span>
+              </div>
+              <div class="spec-card" data-spec="card" onclick="selectSpec(this)">
+                <div class="spec-name">信用卡展示</div>
+                <div class="spec-size">856 × 540 px</div>
+                <span class="spec-tag">產品聚焦</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>金融風格</label>
+            <div class="token-wrap" id="styleTokens">
+              <div class="token active" data-val="deep navy dark luxury fintech aesthetic">深色金融感</div>
+              <div class="token active" data-val="glassmorphism frosted glass panels">玻璃擬態</div>
+              <div class="token" data-val="gold metallic accents premium feel">金屬金感</div>
+              <div class="token" data-val="dramatic cinematic lighting god rays">戲劇光效</div>
+              <div class="token" data-val="minimal clean corporate professional">極簡商業</div>
+              <div class="token" data-val="neon glow fintech cyberpunk data">科技霓虹</div>
+              <div class="token" data-val="soft gradient pastel modern banking">柔和漸層</div>
+              <div class="token" data-val="luxury marble texture high end wealth">奢華大理石</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>文案空間指定</label>
+            <div class="token-wrap" id="textAreaTokens">
+              <div class="token" data-val="keep left 40% clean for headline copy">文案留左</div>
+              <div class="token" data-val="keep right 40% clean for headline copy">文案留右</div>
+              <div class="token" data-val="keep bottom third clear for text overlay">文案留下</div>
+              <div class="token active" data-val="center composition balanced layout no text area required">無文案需求</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Input + variants -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="step-num">②</div>
+          <h2>一鍵多變體生成</h2>
+        </div>
+        <div class="panel-body">
+
+          <div class="field">
+            <label>畫面描述</label>
+            <textarea id="descInput" rows="4" placeholder="例：信用卡卡面浮現在星空中，背景有光粒子飛散，質感高級，適合旅遊聯名卡活動..."></textarea>
+          </div>
+
+          <div class="field">
+            <label>主要 AI 平台</label>
+            <select id="platformSelect">
+              <option value="midjourney">Midjourney (--v 6.1)</option>
+              <option value="flux">Flux / ComfyUI</option>
+              <option value="sd">Stable Diffusion (SDXL)</option>
+              <option value="dalle">DALL-E 3</option>
+              <option value="firefly">Adobe Firefly</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="variant-row">
+            <label>生成變體數量：</label>
+            <div class="count-btns">
+              <button class="count-btn" data-n="1" onclick="setCount(1)">1</button>
+              <button class="count-btn active" data-n="2" onclick="setCount(2)">2</button>
+              <button class="count-btn" data-n="3" onclick="setCount(3)">3</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>變體差異化方向</label>
+            <div class="token-wrap" id="diffTokens">
+              <div class="token active" data-val="color_palette">配色版本</div>
+              <div class="token active" data-val="composition">構圖方向</div>
+              <div class="token" data-val="mood">情緒氛圍</div>
+              <div class="token" data-val="lighting">光效變化</div>
+              <div class="token" data-val="style">畫風切換</div>
+            </div>
+          </div>
+
+          <div id="errorBox" class="error-box" style="display:none;"></div>
+
+          <button class="gen-btn" id="genBtn" onclick="generate()">
+            <span>⚡ 生成提示詞</span>
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Output -->
+    <div class="output-panel">
+      <div class="output-head">
+        <h2>⟡ 生成結果</h2>
+        <div class="output-actions">
+          <button class="small-btn" onclick="copyAll()">全部複製</button>
+          <button class="small-btn" onclick="clearAll()">清除</button>
+        </div>
+      </div>
+      <div class="output-body" id="outputBody">
+        <div class="placeholder" id="placeholder">
+          <div class="placeholder-icon">◈</div>
+          <p>設定規格與描述後<br>按下生成即可產出多版本提示詞</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ──
+const SPEC_MAP = {
+  banner: {
+    label: '主視覺 Banner 1920×600',
+    ratio: '--ar 16:5',
+    compositionHint: 'wide cinematic horizontal composition, left 40% negative space for text, visual weight on right side',
+    mj: '--ar 16:5 --style raw',
+  },
+  kv: {
+    label: '活動 KV 1200×800',
+    ratio: '--ar 3:2',
+    compositionHint: 'centered balanced composition with strong focal point, hero subject centered',
+    mj: '--ar 3:2 --style raw',
+  },
+  social: {
+    label: '社群方形 1080×1080',
+    ratio: '--ar 1:1',
+    compositionHint: 'square composition, centered focal point, clean edges',
+    mj: '--ar 1:1',
+  },
+  story: {
+    label: '限時動態 1080×1920',
+    ratio: '--ar 9:16',
+    compositionHint: 'vertical portrait composition, upper two-thirds visual, lower third clear for text',
+    mj: '--ar 9:16',
+  },
+  edm: {
+    label: 'EDM 主圖 600×300',
+    ratio: '--ar 2:1',
+    compositionHint: 'horizontal layout, right side visual element, left two-thirds clean space',
+    mj: '--ar 2:1 --style raw',
+  },
+  card: {
+    label: '信用卡展示 856×540',
+    ratio: '--ar 8:5',
+    compositionHint: 'product-focused composition, credit card as hero element, dramatic studio lighting',
+    mj: '--ar 8:5 --style raw',
+  },
+};
+
+const DIFF_PROMPTS = {
+  color_palette: 'alternative color palette',
+  composition: 'different compositional angle and layout',
+  mood: 'different emotional mood and atmosphere',
+  lighting: 'different lighting setup',
+  style: 'different art style direction',
+};
+
+let selectedSpec = 'banner';
+let variantCount = 2;
+
+// ── Init ──
+window.onload = () => {
+  const saved = localStorage.getItem('fps_apikey');
+  if (saved) document.getElementById('apiKeyInput').value = saved;
+};
+
+function saveKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (k) { localStorage.setItem('fps_apikey', k); showToast('API Key 已儲存'); }
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c2330;border:1px solid rgba(255,255,255,0.12);color:#e8eaf0;padding:8px 18px;border-radius:6px;font-size:13px;z-index:999;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// ── Spec selection ──
+function selectSpec(el) {
+  document.querySelectorAll('.spec-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedSpec = el.dataset.spec;
+}
+
+// ── Token toggle ──
+document.querySelectorAll('.token').forEach(t => {
+  t.addEventListener('click', () => t.classList.toggle('active'));
+});
+
+// ── Variant count ──
+function setCount(n) {
+  variantCount = n;
+  document.querySelectorAll('.count-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.n) === n);
+  });
+}
+
+// ── Collect active tokens ──
+function getTokens(groupId) {
+  return [...document.querySelectorAll(`#${groupId} .token.active`)]
+    .map(t => t.dataset.val).filter(Boolean);
+}
+
+// ── Generate seed ──
+function makeSeed() {
+  return Math.floor(Math.random() * 4294967295);
+}
+
+// ── Main generate ──
+async function generate() {
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (!apiKey) { showError('請先輸入 Gemini API Key'); return; }
+
+  const desc = document.getElementById('descInput').value.trim();
+  if (!desc) { showError('請描述你的畫面'); return; }
+
+  const spec = SPEC_MAP[selectedSpec];
+  const platform = document.getElementById('platformSelect').value;
+  const styleTokens = getTokens('styleTokens');
+  const textAreaTokens = getTokens('textAreaTokens');
+  const diffTokens = getTokens('diffTokens');
+
+  hideError();
+  setLoading(true);
+
+  const diffDirections = diffTokens.slice(0, 3).map(d => DIFF_PROMPTS[d] || d);
+
+  const systemPrompt = `你是資深金融品牌設計師，同時精通 AI 生圖提示詞撰寫。
+你的任務是為台灣金融業（信用卡、銀行、保險活動）的商業視覺設計師，生成可直接使用的 AI 生圖提示詞。
+輸出必須是嚴格的 JSON 格式，不要有任何說明文字或 markdown 代碼塊，只輸出純 JSON。`;
+
+  const userPrompt = `請根據以下需求，生成 ${variantCount} 組提示詞變體。
+
+【畫面描述】
+${desc}
+
+【規格資訊】
+- 用途：${spec.label}
+- 構圖要求：${spec.compositionHint}
+- 目標平台：${platform}
+
+【風格詞庫（必須融入）】
+${styleTokens.join(', ')}
+
+【文案空間】
+${textAreaTokens.join(', ')}
+
+【各變體差異化方向】
+${diffDirections.map((d, i) => `變體 ${i + 1}：${d}`).join('\n')}
+
+【輸出格式 JSON】
+{
+  "variants": [
+    {
+      "id": 1,
+      "name": "變體名稱（2-4 字）",
+      "focus": "這個變體的核心差異點（一句話）",
+      "prompt_en": "完整英文 prompt，包含所有細節、風格詞、品質詞，適合 ${platform}",
+      "prompt_zh": "完整中文提示詞，與英文版對應",
+      "negative_en": "negative prompt（如適用）",
+      "platform_suffix": "${platform === 'midjourney' ? spec.mj + ' --q 2 --stylize 750' : ''}",
+      "seed": null
+    }
+  ]
+}
+
+注意：
+- 英文 prompt 必須專業、具體、可直接使用
+- 融入金融感關鍵詞：premium, luxury, fintech, financial, sophisticated
+- 每個變體要有明顯不同，不只是換幾個詞
+- 保持商業可用性，避免過於藝術化`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ parts: [{ text: userPrompt }] }],
+        generationConfig: { temperature: 0.85, maxOutputTokens: 3000 }
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error.message);
+
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cleaned = rawText.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    // Assign seeds
+    parsed.variants.forEach(v => { v.seed = makeSeed(); });
+
+    renderVariants(parsed.variants);
+
+  } catch (err) {
+    showError('生成失敗：' + err.message);
+    setLoading(false);
+    showPlaceholder();
+  }
+
+  setLoading(false);
+}
+
+// ── Render ──
+function renderVariants(variants) {
+  const body = document.getElementById('outputBody');
+  body.innerHTML = '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'variants-wrap';
+
+  const badgeClasses = ['v1', 'v2', 'v3'];
+  const badgeLabels = ['VAR A', 'VAR B', 'VAR C'];
+
+  variants.forEach((v, i) => {
+    const allText = [v.prompt_en, v.prompt_zh, v.negative_en, v.platform_suffix].filter(Boolean).join('\n\n');
+
+    const card = document.createElement('div');
+    card.className = 'variant-card';
+    card.innerHTML = `
+      <div class="variant-head">
+        <div class="variant-label">
+          <span class="variant-badge ${badgeClasses[i] || 'v1'}">${badgeLabels[i] || 'VAR ' + (i+1)}</span>
+          <span class="variant-name">${v.name}</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:4px;">— ${v.focus}</span>
+        </div>
+        <button class="variant-copy-btn" onclick="copyVariant(this, \`${escStr(allText)}\`)">複製</button>
+      </div>
+      <div class="variant-body">
+        <div class="prompt-section">
+          <div class="prompt-lang">English Prompt</div>
+          <div class="prompt-text">${esc(v.prompt_en)}${v.platform_suffix ? '\n' + esc(v.platform_suffix) : ''}</div>
+        </div>
+        <div class="prompt-section">
+          <div class="prompt-lang">中文提示詞</div>
+          <div class="prompt-text">${esc(v.prompt_zh)}</div>
+        </div>
+        ${v.negative_en ? `
+        <div class="prompt-section">
+          <div class="prompt-lang">Negative Prompt</div>
+          <div class="prompt-text" style="color:var(--text3);">${esc(v.negative_en)}</div>
+        </div>` : ''}
+      </div>
+      <div class="seed-row">
+        <span class="seed-label">Seed</span>
+        <span class="seed-val">${v.seed}</span>
+        <span class="seed-copy" onclick="copySeed(this, '${v.seed}')">複製 Seed</span>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+
+  body.appendChild(wrap);
+}
+
+function esc(s = '') {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escStr(s = '') {
+  return s.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+}
+
+// ── Copy ──
+function copyVariant(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已複製 ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copySeed(el, seed) {
+  navigator.clipboard.writeText(seed).then(() => {
+    el.textContent = '已複製 ✓';
+    setTimeout(() => { el.textContent = '複製 Seed'; }, 2000);
+  });
+}
+
+function copyAll() {
+  const cards = document.querySelectorAll('.prompt-text');
+  if (!cards.length) return;
+  const all = [...cards].map(c => c.textContent).join('\n\n---\n\n');
+  navigator.clipboard.writeText(all).then(() => showToast('全部提示詞已複製'));
+}
+
+function clearAll() {
+  showPlaceholder();
+}
+
+// ── UI helpers ──
+function showPlaceholder() {
+  document.getElementById('outputBody').innerHTML = `
+    <div class="placeholder" id="placeholder">
+      <div class="placeholder-icon">◈</div>
+      <p>設定規格與描述後<br>按下生成即可產出多版本提示詞</p>
+    </div>`;
+}
+
+let loadingInterval = null;
+const loadingMsgs = [
+  '分析商業設計需求中…',
+  '套用金融風格詞庫中…',
+  '生成差異化變體中…',
+  '最佳化平台參數中…',
+];
+
+function setLoading(on) {
+  const btn = document.getElementById('genBtn');
+  const body = document.getElementById('outputBody');
+  btn.disabled = on;
+
+  if (on) {
+    let idx = 0;
+    body.innerHTML = `
+      <div class="loading-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="pFill"></div></div>
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadTxt">${loadingMsgs[0]}</div>
+      </div>`;
+
+    let pct = 0;
+    loadingInterval = setInterval(() => {
+      idx = (idx + 1) % loadingMsgs.length;
+      const el = document.getElementById('loadTxt');
+      if (el) el.textContent = loadingMsgs[idx];
+      pct = Math.min(pct + 18, 90);
+      const fill = document.getElementById('pFill');
+      if (fill) fill.style.width = pct + '%';
+    }, 900);
+
+    btn.innerHTML = '<span>生成中…</span>';
+  } else {
+    clearInterval(loadingInterval);
+    btn.innerHTML = '<span>⚡ 生成提示詞</span>';
+    const fill = document.getElementById('pFill');
+    if (fill) fill.style.width = '100%';
+  }
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg; box.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+</script>
+</body>
+</html>
